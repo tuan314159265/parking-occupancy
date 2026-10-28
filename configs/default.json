@@ -1,0 +1,13 @@
+{
+  "dataset_root": "data/raw/PKLot",
+  "output_dir": "outputs",
+  "seed": 42,
+  "split_ratios": [
+    0.7,
+    0.15,
+    0.15
+  ],
+  "positive_class": "occupied",
+  "geometry": "pixel polygon; origin top-left; x right; y down",
+  "detector": null
+}

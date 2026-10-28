@@ -1,0 +1,30 @@
+\documentclass[12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T5]{fontenc}
+\usepackage[vietnamese]{babel}
+\usepackage{graphicx,booktabs,hyperref}
+\title{Nhận diện trạng thái ô đỗ xe từ ảnh toàn cảnh}
+\author{Nhóm nghiên cứu -- Tuấn}
+\date{28/10/2026}
+\begin{document}
+\maketitle
+\section{Bài toán và phạm vi}
+Dự đoán trạng thái có xe/trống của từng ô. Vùng ô đỗ không phải hộp xe.
+\section{Dữ liệu và kiểm tra chất lượng}
+PKLot: ảnh toàn cảnh, XML vùng ô, ngày, camera và thời tiết.
+Điền số liệu từ audit\_summary.json sau khi tải và kiểm tra toàn bộ dữ liệu.
+\section{Phương pháp}
+\subsection{Hình học ô đỗ và giao diện detector}
+\subsection{Suy luận trạng thái có xe/trống}
+\section{Thiết lập đánh giá}
+Tách tập theo ngày; occupied là lớp dương. Báo cáo confusion matrix,
+accuracy, precision, recall và F1 theo camera và thời tiết.
+Không dùng nhãn vùng ô làm ground truth hộp xe để tính mAP.
+\section{Kết quả và thảo luận}
+Chưa có kết quả mô hình; không dùng dữ liệu kiểm thử nhân tạo làm kết quả thực nghiệm.
+\section{Kết luận}
+\begin{thebibliography}{9}
+\bibitem{pklot} Almeida et al. PKLot -- A robust dataset for parking lot classification.
+Expert Systems with Applications, 42(11):4937--4949, 2015.
+\end{thebibliography}
+\end{document}
