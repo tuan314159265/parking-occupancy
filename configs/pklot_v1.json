@@ -1,0 +1,36 @@
+{
+  "dataset_version": "pklot_v1",
+  "seed": 42,
+  "cameras": [
+    "PUCPR",
+    "UFPR04",
+    "UFPR05"
+  ],
+  "day_assignment_trials": 256,
+  "max_frames_per_camera_weather": {
+    "train": 140,
+    "val": 30,
+    "test": 30
+  },
+  "protocols": {
+    "within_camera": {
+      "kind": "within_camera",
+      "day_ratios": {
+        "train": 0.7,
+        "val": 0.15,
+        "test": 0.15
+      }
+    },
+    "transfer_ufpr04_to_ufpr05": {
+      "kind": "camera_transfer",
+      "source_cameras": [
+        "UFPR04"
+      ],
+      "target_camera": "UFPR05",
+      "source_day_ratios": {
+        "train": 0.8,
+        "val": 0.2
+      }
+    }
+  }
+}

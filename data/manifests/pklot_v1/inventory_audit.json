@@ -1,0 +1,18 @@
+{
+  "audit_version": 2,
+  "counts": {
+    "camera/PUCPR": 4077,
+    "camera/UFPR04": 3547,
+    "camera/UFPR05": 4014,
+    "date_directory_mismatch": 195,
+    "occupied": 319261,
+    "vacant": 348315,
+    "weather/overcast": 4097,
+    "weather/rainy": 1206,
+    "weather/sunny": 6335
+  },
+  "images_without_xml": 1,
+  "rejected_frames": 778,
+  "valid_frames": 11638,
+  "xml_count": 12416
+}

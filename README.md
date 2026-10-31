@@ -112,3 +112,9 @@ FORCE_AUDIT = False
 SHARED_DATASET_DIR phải chứa các camera (UFPR04, UFPR05, PUCPR/PUC), không trỏ vào archive hoặc bộ crop PKLotSegmented. Mã chỉ đọc dataset và audit chung; manifest được sao chép về thư mục kết quả cá nhân. Nếu đường dẫn chung sai, chương trình dừng thay vì tải/giải nén vào thư mục chung. Không có audit chung thì để SHARED_AUDIT_DIR trống; mỗi người chỉ audit một lần, các lần sau dùng cache cá nhân.
 
 Kết nối Drive, cài Pillow và tải/import module vẫn chạy khi Run All; chỉ các bước dữ liệu tốn thời gian được bỏ qua. Các biến REUSE_EXTRACTED/provenance.json của notebook cũ không còn là điều kiện bắt buộc.
+
+## Tập dữ liệu đã khóa cho các phương pháp
+
+Task 3 đã có bộ `pklot_v1`: **1.182/270/270** frame train/validation/test cho thí nghiệm chính và **420/90/90** cho chuyển góc nhìn UFPR04 → UFPR05. Notebook mục **3.2** tự tải cùng bộ manifest/JSON vùng ô từ GitHub và kiểm tra checksum; không chia lại ngẫu nhiên theo từng người. Cấu hình tại `configs/pklot_v1.json`, metadata nhẹ tại `data/manifests/pklot_v1/`; ảnh/XML vẫn nằm ngoài Git.
+
+Xem [giao thức dữ liệu](docs/dataset-protocol.md) để dùng manifest, đọc layout theo geometry_id và tái lập split. Loader v2 hỗ trợ Point/point, lấy ngày từ tên ảnh và giữ ngày thư mục để truy vết. Cache audit v1 cần chạy lại một lần sau khi nâng module để cập nhật metadata; không tải lại ảnh.

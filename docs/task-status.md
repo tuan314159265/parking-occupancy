@@ -10,3 +10,7 @@ Kiểm tra tạm outputs/partial chỉ chứa các file có trong đầu archive
 ## Cập nhật luồng GitHub → Colab
 
 Mã xử lý được gom vào parking_module.py tại gốc repository. Notebook chỉ cần OWNER/REPO/REF, tải file từ GitHub và import trực tiếp. Không yêu cầu ZIP repo hay cài package trên Colab. Các module src cũ chỉ chuyển tiếp đến module gốc để tương thích CLI local. Repo đích: https://github.com/tuan314159265/parking-occupancy; notebook đã cấu hình sẵn.
+
+## 31/10/2026 — task 3
+
+Đã rà dữ liệu, cập nhật loader v2, audit lại, khóa configs/pklot_v1.json và xuất train/val/test cùng JSON layout. Thí nghiệm chính 1.182/270/270 frame; chuyển UFPR04 → UFPR05 có 420/90/90. Notebook 3.2 tải manifest dùng chung từ GitHub. Xem docs/dataset-protocol.md để biết thống kê và kiểm chứng. Phần split dữ liệu đã có; các phương pháp và đánh giá thực nghiệm vẫn là bước tiếp theo.
