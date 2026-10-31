@@ -86,3 +86,5 @@ Notebook kiểm tra Drive đã mount trước khi kết nối. Nếu kết nối
 Dùng runtime Google Colab và cấp quyền Drive khi hộp thoại hiện ra. Nếu lỗi tiếp diễn, chọn Runtime → Disconnect and delete runtime, kết nối lại và Run All (dữ liệu tạm trong phiên bị xóa, dữ liệu trên Drive được giữ). Local runtime không hỗ trợ drive.mount; đặt USE_GOOGLE_DRIVE=False để dùng ổ đĩa local. Khi tắt Drive trên Colab, dữ liệu chỉ lưu tạm trong runtime.
 
 Mỗi lần chạy cell tải/import module, notebook gửi yêu cầu tải mới và in SHA256 mã đã tải. Cập nhật parking_module.py trên nhánh main chỉ cần chạy lại cell đó rồi các cell xử lý; cập nhật .ipynb cần mở lại notebook từ GitHub.
+
+Nếu thấy `MessageError: credential propagation was unsuccessful`, Colab chưa nhận được credentials. Chạy lại cell mount và kiểm tra đã chọn đủ các quyền được yêu cầu trong cửa sổ xác thực trước khi Continue. Nhóm Colab xác nhận thiếu một quyền cũng có thể gây lỗi này: https://github.com/googlecolab/colabtools/issues/6089. Notebook nhận diện lỗi và dừng với hướng dẫn; không tự cấp quyền hay chuyển dữ liệu sang bộ nhớ tạm.
