@@ -78,3 +78,11 @@ Trạng thái bàn giao và các bước chưa xác minh: `docs/task-status.md`.
 Bạn có thể tự upload archive local lên đúng thư mục Drive để Colab tải tiếp, hoặc upload archive hoàn chỉnh để Colab chỉ giải nén. Hai môi trường dùng bản dữ liệu riêng nếu không chủ động chuyển file.
 
 [Mở notebook trên Colab](https://colab.research.google.com/github/tuan314159265/parking-occupancy/blob/main/notebooks/01_pklot_run_all.ipynb).
+
+## Nếu Colab báo `mount failed`
+
+Notebook kiểm tra Drive đã mount trước khi kết nối. Nếu kết nối lỗi sẽ thử lại một lần bằng force_remount; nếu vẫn lỗi sẽ dừng trước khi tải dữ liệu và hiện hướng dẫn. Đây là bước xác thực/kết nối của Colab, sửa notebook không bảo đảm khắc phục sự cố tài khoản hoặc dịch vụ.
+
+Dùng runtime Google Colab và cấp quyền Drive khi hộp thoại hiện ra. Nếu lỗi tiếp diễn, chọn Runtime → Disconnect and delete runtime, kết nối lại và Run All (dữ liệu tạm trong phiên bị xóa, dữ liệu trên Drive được giữ). Local runtime không hỗ trợ drive.mount; đặt USE_GOOGLE_DRIVE=False để dùng ổ đĩa local. Khi tắt Drive trên Colab, dữ liệu chỉ lưu tạm trong runtime.
+
+Mỗi lần chạy cell tải/import module, notebook gửi yêu cầu tải mới và in SHA256 mã đã tải. Cập nhật parking_module.py trên nhánh main chỉ cần chạy lại cell đó rồi các cell xử lý; cập nhật .ipynb cần mở lại notebook từ GitHub.
