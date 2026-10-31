@@ -57,6 +57,8 @@ import xml.etree.ElementTree as ET
 from PIL import Image
 
 WEATHER = {"sunny": "sunny", "rainy": "rainy", "cloudy": "overcast", "overcast": "overcast"}
+AUDIT_VERSION = 1
+
 CAMERAS = {"UFPR04", "UFPR05", "PUCPR", "PUC", "parking1a", "parking1b", "parking2"}
 
 def metadata(path):
@@ -122,6 +124,7 @@ def audit(root, output, seed=42):
     if not xmls:
         raise ValueError(f"no full-frame XML files under {root}")
     output.mkdir(parents=True, exist_ok=True)
+    (output / "audit_summary.json").unlink(missing_ok=True)  # interrupted audit must not leave a usable cache
     stats, rejected, count = Counter(), 0, 0
     with (output/"valid_samples.jsonl").open("w") as valid, (output/"issues.jsonl").open("w") as issues:
         for path in xmls:
@@ -144,7 +147,7 @@ def audit(root, output, seed=42):
             if image.suffix.lower() in {".jpg", ".jpeg", ".png"} and not image.with_suffix(".xml").exists():
                 orphan += 1
                 issues.write(json.dumps({"path":image.relative_to(root).as_posix(), "error":"missing XML"})+"\n")
-    summary = dict(root=str(root), seed=seed, xml_count=len(xmls), valid_frames=count,
+    summary = dict(audit_version=AUDIT_VERSION, root=str(root), seed=seed, xml_count=len(xmls), valid_frames=count,
                    rejected_frames=rejected, images_without_xml=orphan, counts=dict(stats))
     (output/"audit_summary.json").write_text(json.dumps(summary, indent=2)+"\n")
     return summary
@@ -194,7 +197,7 @@ def prepare(raw, output, download=True):
     raw = Path(raw).resolve()
     raw.mkdir(parents=True, exist_ok=True)
     archive = raw/"PKLot.tar.gz"
-    if download:
+    if download and (not archive.exists() or archive.stat().st_size != EXPECTED_BYTES):
         subprocess.run(["curl", "-fL", "--retry", "3", "--connect-timeout", "30",
                         "-C", "-", "-o", str(archive), URL], check=True)
     if not archive.exists() or archive.stat().st_size != EXPECTED_BYTES:
@@ -204,6 +207,8 @@ def prepare(raw, output, download=True):
         for chunk in iter(lambda: stream.read(8*1024*1024), b""):
             digest.update(chunk)
     target = raw/"PKLot"
+    pending = raw/".pklot-extraction-in-progress"
+    pending.touch()
     extracted = 0
     # Read through EOF: gzip/tar corruption raises; never execute links or external paths.
     with tarfile.open(archive, "r|gz") as tar:
@@ -221,6 +226,7 @@ def prepare(raw, output, download=True):
                 for chunk in iter(lambda: src.read(1024*1024), b""):
                     dst.write(chunk)
             extracted += 1
+    pending.unlink()
     result = audit(target, output)
     Path(output, "provenance.json").write_text(json.dumps(dict(url=URL, bytes=archive.stat().st_size,
         sha256=digest.hexdigest(), extracted_files=extracted,
@@ -228,6 +234,97 @@ def prepare(raw, output, download=True):
     if not result["valid_frames"]:
         raise ValueError("no valid full frames")
     return result
+
+def _cached_audit(root, source, seed, allow_rebase=False):
+    """Fast cache check, not a new full audit. Dataset must remain unchanged."""
+    try:
+        summary = json.loads((source / "audit_summary.json").read_text())
+        if (summary.get("audit_version") != AUDIT_VERSION or summary.get("seed") != seed
+                or summary.get("valid_frames", 0) <= 0):
+            return None
+        if not allow_rebase and Path(summary["root"]).resolve() != root:
+            return None
+        if not (source / "issues.jsonl").is_file():
+            return None
+        with (source / "valid_samples.jsonl").open() as stream:
+            sample = json.loads(next(stream))
+        # Verify one actual frame against the cached record, including labels and geometry.
+        # Relative paths allow a shared manifest to work under another user's Drive shortcut.
+        xml = (root / sample["xml_path"]).resolve()
+        image = (root / sample["image_path"]).resolve()
+        if not xml.is_relative_to(root) or not image.is_relative_to(root):
+            return None
+        frame = read_frame(xml, root)
+        expected = json.loads(json.dumps(asdict(frame)))
+        if any(sample.get(key) != value for key, value in expected.items()):
+            return None
+        if sample.get("split") != split_for(frame, seed):
+            return None
+        return dict(summary, root=str(root))
+    except (OSError, ValueError, KeyError, TypeError, StopIteration, ET.ParseError):
+        return None
+
+
+def ensure_dataset(raw, output, dataset_root=None, cached_audit_dir=None,
+                   download=True, force_audit=False, seed=42):
+    """Reuse extracted data and audit, or prepare missing private data.
+
+    dataset_root explicitly selects read-only existing/shared data. A bad shared
+    path raises instead of downloading into or modifying the shared location.
+    force_audit revalidates an unchanged cache after dataset edits.
+    """
+    import shutil
+    raw, output = Path(raw).resolve(), Path(output).resolve()
+    shared = dataset_root is not None
+    root = Path(dataset_root).resolve() if shared else raw / "PKLot"
+    if shared and (output.is_relative_to(root) or root.is_relative_to(output)):
+        raise ValueError("Keep personal output and shared dataset in separate directories")
+    if cached_audit_dir is not None:
+        cache = Path(cached_audit_dir).resolve()
+        if cache != output and (output.is_relative_to(cache) or cache.is_relative_to(output)):
+            raise ValueError("Keep shared audit cache separate from personal outputs")
+        if shared and cache == output:
+            raise ValueError("Shared audit cache must not be the personal output directory")
+    pending = root.parent / ".pklot-extraction-in-progress"
+    if pending.exists():
+        if shared:
+            raise ValueError("Shared dataset extraction is incomplete; ask owner to finish it")
+        print("Previous extraction was interrupted; resume preparation.")
+        summary = prepare(raw, output, download)
+        if seed != 42:
+            summary = audit(root, output, seed)
+        return summary
+    if not root.is_dir() or next(root.rglob("*.xml"), None) is None:
+        if shared:
+            raise ValueError(f"No full-frame XML at shared dataset path: {root}. Check Drive shortcut/path.")
+        print("No extracted dataset; download/resume and extract.")
+        summary = prepare(raw, output, download)
+        if seed != 42:
+            summary = audit(root, output, seed)
+        return summary
+
+    print(f"Existing dataset: {root}. Skip download and extraction.")
+    if not force_audit:
+        sources = [(output, False)]
+        if cached_audit_dir is not None:
+            sources.append((Path(cached_audit_dir).resolve(), True))
+        for source, allow_rebase in sources:
+            summary = _cached_audit(root, source, seed, allow_rebase)
+            if summary is not None:
+                if source != output:
+                    output.mkdir(parents=True, exist_ok=True)
+                    (output / "audit_summary.json").unlink(missing_ok=True)
+                    for name in ("valid_samples.jsonl", "issues.jsonl"):
+                        shutil.copyfile(source / name, output / name)
+                    (output / "audit_summary.json").write_text(json.dumps(summary, indent=2)+"\n")
+                print("Reuse audit/manifest; skip full audit (checked one sample).")
+                return summary
+    print("No compatible audit cache or FORCE_AUDIT=True; audit existing dataset once.")
+    summary = audit(root, output, seed)
+    if not summary["valid_frames"]:
+        raise ValueError("No valid frames; inspect personal outputs/issues.jsonl")
+    return summary
+
 
 def prepare_main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)

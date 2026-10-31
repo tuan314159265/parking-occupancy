@@ -11,3 +11,5 @@
 Đánh giá trạng thái ô: occupied là lớp dương, confusion matrix TP/TN/FP/FN, accuracy, precision, recall, F1 (mẫu số 0 trả 0). Báo cáo tổng và theo camera/thời tiết; không tính vehicle mAP từ XML PKLot. Cần nhãn hộp xe độc lập nếu đánh giá detector.
 
 Split dự án: SHA256(seed:date), bucket 70/15/15 theo ngày trên tất cả camera; tỷ lệ thực tế có thể lệch vì số ngày hữu hạn. Đây là giao thức dự án, không phải bản sao split chính thức 50/50. Tất cả ô và camera cùng ngày thuộc cùng split. Có thể thêm leave-one-camera-out sau này, cần tệp cấu hình riêng.
+
+Audit cache: audit_summary.json có audit_version và seed; valid_samples.jsonl giữ đường dẫn tương đối. ensure_dataset kiểm tra một frame khi dùng cache. Dữ liệu phải bất biến; force_audit=True để quét lại sau thay đổi. cached_audit_dir cho phép chủ dataset chia sẻ manifest dưới đường dẫn mount khác; kết quả được ghi riêng tại output.

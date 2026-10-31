@@ -30,7 +30,7 @@ parking-audit --root data/raw/PKLot --output outputs/full
 1. Push file **`parking_module.py`** ở thư mục gốc lên GitHub public. Đây là file duy nhất chứa mã xử lý và chỉ cần Pillow; không cần push data, outputs hoặc cài package repo trên Colab.
 2. Upload **`notebooks/01_pklot_run_all.ipynb`** lên Colab.
 3. Notebook đã cấu hình `OWNER=tuan314159265`, `REPO=parking-occupancy`, `REF=main`; sửa trong cell đầu nếu dùng repo khác. REF là nhánh thực tế (`main` hoặc `master`), tag hoặc commit SHA. Mặc định module nằm ở gốc repo.
-4. Chọn Run All. Notebook cài Pillow, tải module từ raw.githubusercontent.com, import và gọi `parking.prepare(...)`, rồi đọc một frame hợp lệ. Lần Run All sau tải lại đúng REF cấu hình.
+4. Chọn Run All. Notebook cài Pillow, tải module từ raw.githubusercontent.com, import và gọi `parking.ensure_dataset(...)`, rồi đọc một frame hợp lệ. Lần Run All sau tải lại đúng REF cấu hình.
 
 Notebook lưu URL, REF và SHA256 module vào `module_source.json` để ghi nhận mã đã chạy. Dùng commit SHA nếu cần tái lập chính xác. Repo private chưa được hỗ trợ trong notebook này.
 
@@ -42,7 +42,7 @@ python parking_module.py prepare
 python parking_module.py audit --root data/raw/PKLot --output outputs/full
 ```
 
-Không cần clone hay upload toàn bộ repository lên Colab. Notebook mặc định mount Google Drive của bạn và lưu archive, ảnh/XML cùng kết quả tại `MyDrive/parking-occupancy/`. Lần sau dùng lại dữ liệu đã giải nén thành công rồi chạy lại audit; không tải/giải nén lại. Đặt `USE_GOOGLE_DRIVE=False` nếu chỉ muốn dùng bộ nhớ tạm Colab. Repo GitHub: https://github.com/tuan314159265/parking-occupancy. Notebook đã điền sẵn tài khoản, tên repo và nhánh main. Notebook chưa chạy trên dịch vụ Colab thực tế.
+Không cần clone hay upload toàn bộ repository lên Colab. Notebook mặc định mount Google Drive của bạn và lưu archive, ảnh/XML cùng kết quả tại `MyDrive/parking-occupancy/`. Lần sau dùng lại dataset và manifest tương thích, bỏ qua tải/giải nén/audit toàn bộ. Nếu chưa có cache phù hợp, chỉ audit một lần; không cần provenance.json để nhận dataset đã giải nén. Đặt `USE_GOOGLE_DRIVE=False` nếu chỉ muốn dùng bộ nhớ tạm Colab. Repo GitHub: https://github.com/tuan314159265/parking-occupancy. Notebook đã điền sẵn tài khoản, tên repo và nhánh main. Notebook chưa chạy trên dịch vụ Colab thực tế.
 
 ## Cấu trúc
 
@@ -88,3 +88,27 @@ Dùng runtime Google Colab và cấp quyền Drive khi hộp thoại hiện ra. 
 Mỗi lần chạy cell tải/import module, notebook gửi yêu cầu tải mới và in SHA256 mã đã tải. Cập nhật parking_module.py trên nhánh main chỉ cần chạy lại cell đó rồi các cell xử lý; cập nhật .ipynb cần mở lại notebook từ GitHub.
 
 Nếu thấy `MessageError: credential propagation was unsuccessful`, Colab chưa nhận được credentials. Chạy lại cell mount và kiểm tra đã chọn đủ các quyền được yêu cầu trong cửa sổ xác thực trước khi Continue. Nhóm Colab xác nhận thiếu một quyền cũng có thể gây lỗi này: https://github.com/googlecolab/colabtools/issues/6089. Notebook nhận diện lỗi và dừng với hướng dẫn; không tự cấp quyền hay chuyển dữ liệu sang bộ nhớ tạm.
+
+## Dùng lại dữ liệu và chia sẻ cho nhóm
+
+Notebook phiên bản `dataset-reuse-v1` tự quyết định bước cần chạy:
+
+- Có thư mục dataset chứa XML: bỏ qua tải và giải nén, kể cả không có provenance.json.
+- Có audit/manifest tương thích với seed và phiên bản loader: dùng lại, chỉ đối chiếu một frame với ảnh/XML thật; không quét toàn bộ dataset.
+- Chưa có cache, cache lỗi hoặc FORCE_AUDIT=True: audit dữ liệu có sẵn một lần và ghi kết quả cá nhân.
+- Chưa có dataset riêng: tải tiếp archive nếu thiếu; archive đủ kích thước thì bỏ qua curl. Bước giải nén bị gián đoạn do phiên bản mới ghi nhận sẽ được làm lại.
+
+Cache nhanh giả định dataset không thay đổi. Nếu thêm/xóa/sửa dữ liệu, đặt FORCE_AUDIT=True. Kiểm tra nhanh một frame không xác nhận mọi file còn nguyên. XML tồn tại cũng không chứng minh đã đủ toàn bộ PKLot; đối chiếu số frame trong thống kê nếu cần xác nhận phạm vi dữ liệu. Audit từ phiên bản cũ chưa có audit_version sẽ được chạy lại một lần để tạo cache mới.
+
+Để dùng dữ liệu chung chỉ đọc, từng thành viên thêm shortcut thư mục chung vào MyDrive rồi chỉnh cell cấu hình:
+
+```python
+DRIVE_PROJECT_DIR = "parking-occupancy"  # Thư mục riêng của thành viên, không phải shortcut chung.
+SHARED_DATASET_DIR = "/content/drive/MyDrive/PKLot-shared/data/raw/PKLot"
+SHARED_AUDIT_DIR = "/content/drive/MyDrive/PKLot-shared/outputs/full"  # Tùy chọn.
+FORCE_AUDIT = False
+```
+
+SHARED_DATASET_DIR phải chứa các camera (UFPR04, UFPR05, PUCPR/PUC), không trỏ vào archive hoặc bộ crop PKLotSegmented. Mã chỉ đọc dataset và audit chung; manifest được sao chép về thư mục kết quả cá nhân. Nếu đường dẫn chung sai, chương trình dừng thay vì tải/giải nén vào thư mục chung. Không có audit chung thì để SHARED_AUDIT_DIR trống; mỗi người chỉ audit một lần, các lần sau dùng cache cá nhân.
+
+Kết nối Drive, cài Pillow và tải/import module vẫn chạy khi Run All; chỉ các bước dữ liệu tốn thời gian được bỏ qua. Các biến REUSE_EXTRACTED/provenance.json của notebook cũ không còn là điều kiện bắt buộc.
