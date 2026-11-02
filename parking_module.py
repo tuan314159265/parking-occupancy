@@ -1,6 +1,7 @@
 """Standalone PKLot module for GitHub → Colab.
 
-Requires Python >=3.10 and Pillow. Import directly or run:
+Requires Python >=3.10 and Pillow; geometry analysis additionally uses NumPy/OpenCV.
+Import directly or run:
   python parking_module.py prepare
   python parking_module.py audit --root data/raw/PKLot
 No repository package installation required.
@@ -530,6 +531,7 @@ import hashlib
 import json
 from pathlib import Path
 import subprocess
+import sys
 import tarfile
 import time
 
@@ -956,6 +958,181 @@ def read_project_frame(record, dataset_root):
     return frame
 
 
+# Parking-line geometry. NumPy/OpenCV are imported when needed.
+# Pixel parameters target original 1280x720 PKLot frames; tune on train/val.
+DEFAULT_GEOMETRY_CONFIG = {
+    "gaussian_kernel": 5,
+    "gaussian_sigma": 1.2,
+    "canny_low": 50,
+    "canny_high": 150,
+    "hough_votes": 20,
+    "min_line_length": 20,
+    "max_line_gap": 10,
+    "roi_margin": 8,
+    "min_roi_fraction": 0.9,
+    "angle_tolerance_deg": 12.0,
+    "boundary_distance": 6.0,
+    "min_edge_support": 0.25,
+    "min_supported_edges": 2,
+}
+
+
+def _geometry_angle_difference(first, second):
+    """Undirected angle difference in degrees, in [0, 90]."""
+    import numpy as np
+
+    return np.abs((np.asarray(first) - np.asarray(second) + 90.0) % 180.0 - 90.0)
+
+
+def analyze_parking_geometry(image_bgr, layout, config=None):
+    """Detect parking lines and measure boundary support, never occupancy.
+
+    image_bgr is a uint8 BGR array in original image coordinates.
+    layout is the entry selected by a frame's geometry_id, containing
+    width, height and spaces (space_id, polygon). Occupancy labels are
+    neither required nor read. config overrides DEFAULT_GEOMETRY_CONFIG;
+    distances are original-image pixels. Defaults are uncalibrated.
+
+    Returns JSON-compatible segments, per-slot boundary/edge support,
+    quality counts, effective config, and an images dict of NumPy arrays.
+    Exclude images when serializing. Boundary support unions finite line
+    evidence sampled at <=2 pixels and weights edges by length. The flags
+    supported, limited_support and no_support describe evidence only;
+    they are not calibrated correctness scores or occupancy predictions.
+
+    NumPy/OpenCV are imported on demand so dataset tools need only Pillow.
+    """
+    try:
+        import cv2
+        import numpy as np
+    except ImportError as exc:
+        raise ImportError(
+            "Geometry analysis requires NumPy and OpenCV. Install the project dependencies: "
+            "pip install -e ., "
+            "or pip install numpy opencv-python-headless for standalone use."
+        ) from exc
+    cfg = dict(DEFAULT_GEOMETRY_CONFIG)
+    if config is not None:
+        if set(config) - set(cfg):
+            raise ValueError("Unknown geometry configuration key")
+        cfg.update(config)
+    if (not isinstance(image_bgr, np.ndarray) or image_bgr.dtype != np.uint8
+            or image_bgr.ndim != 3 or image_bgr.shape[2] != 3):
+        raise ValueError("Expected a uint8 BGR image with three channels")
+    height, width = image_bgr.shape[:2]
+    if (width, height) != (layout["width"], layout["height"]):
+        raise ValueError("Image size differs from layout; use original pixel coordinates")
+    integer_keys = ("gaussian_kernel", "hough_votes", "min_line_length",
+                    "max_line_gap", "roi_margin", "min_supported_edges")
+    if any(type(cfg[key]) is not int for key in integer_keys):
+        raise ValueError("Kernel, Hough counts, pixel lengths and edge count must be integers")
+    if (cfg["gaussian_kernel"] < 1 or cfg["gaussian_kernel"] % 2 != 1
+            or cfg["gaussian_sigma"] < 0
+            or not 0 <= cfg["canny_low"] < cfg["canny_high"] <= 255
+            or cfg["hough_votes"] < 1 or cfg["min_line_length"] < 1
+            or cfg["max_line_gap"] < 0 or cfg["roi_margin"] < 0
+            or not 0 < cfg["min_roi_fraction"] <= 1
+            or not 0 < cfg["angle_tolerance_deg"] < 90
+            or cfg["boundary_distance"] <= 0
+            or not 0 < cfg["min_edge_support"] <= 1
+            or cfg["min_supported_edges"] < 1
+            or not all(np.isfinite(value) for value in cfg.values())):
+        raise ValueError("Invalid geometry configuration")
+
+    polygons, slot_ids = [], []
+    for space in layout["spaces"]:
+        polygon = np.asarray(space["polygon"], dtype=np.float64)
+        if (polygon.ndim != 2 or polygon.shape[1] != 2 or len(polygon) < 3
+                or not np.isfinite(polygon).all()
+                or np.any(polygon < 0) or np.any(polygon > [width, height])
+                or cv2.contourArea(polygon.astype(np.float32)) <= 0
+                or np.any(np.linalg.norm(np.roll(polygon, -1, axis=0) - polygon, axis=1) == 0)):
+            raise ValueError("Invalid parking-space polygon")
+        polygons.append(polygon)
+        slot_ids.append(str(space["space_id"]))
+    if not polygons or len(set(slot_ids)) != len(slot_ids):
+        raise ValueError("Expected nonempty layout with unique space IDs")
+
+    roi = np.zeros((height, width), dtype=np.uint8)
+    # Fill separately: overlapping spaces must form a union, never holes.
+    for polygon in polygons:
+        cv2.fillPoly(roi, [np.rint(polygon).astype(np.int32)], 255)
+    margin = cfg["roi_margin"]
+    if margin:
+        roi = cv2.dilate(roi, cv2.getStructuringElement(
+            cv2.MORPH_ELLIPSE, (2 * margin + 1, 2 * margin + 1)))
+    gray = cv2.cvtColor(image_bgr, cv2.COLOR_BGR2GRAY)
+    kernel = cfg["gaussian_kernel"]
+    blurred = cv2.GaussianBlur(gray, (kernel, kernel), cfg["gaussian_sigma"])
+    edges = cv2.Canny(blurred, cfg["canny_low"], cfg["canny_high"], L2gradient=True)
+    roi_edges = cv2.bitwise_and(edges, roi)
+    vectors = np.concatenate([np.roll(polygon, -1, axis=0) - polygon for polygon in polygons])
+    expected_angles = np.degrees(np.arctan2(vectors[:, 1], vectors[:, 0])) % 180
+    cv2.setRNGSeed(42)
+    raw = cv2.HoughLinesP(roi_edges, rho=1, theta=np.pi / 180,
+                          threshold=cfg["hough_votes"], minLineLength=cfg["min_line_length"],
+                          maxLineGap=cfg["max_line_gap"])
+    raw_lines = [] if raw is None else raw.reshape(-1, 4).tolist()
+    segments = []
+    for x1, y1, x2, y2 in sorted(raw_lines):
+        start = np.array([x1, y1], dtype=float)
+        end = np.array([x2, y2], dtype=float)
+        length = float(np.linalg.norm(end - start))
+        if length < cfg["min_line_length"]:
+            continue
+        angle = float(np.degrees(np.arctan2(y2 - y1, x2 - x1)) % 180)
+        if np.min(_geometry_angle_difference(angle, expected_angles)) > cfg["angle_tolerance_deg"]:
+            continue
+        samples = np.rint(np.linspace(start, end, max(2, int(np.ceil(length)) + 1))).astype(int)
+        if np.mean(roi[samples[:, 1], samples[:, 0]] > 0) < cfg["min_roi_fraction"]:
+            continue
+        segments.append({"xyxy": [x1, y1, x2, y2], "length_px": length,
+                         "angle_deg": angle, "supports_boundary": False})
+
+    # Distances to finite segments, not infinite Hough lines.
+    segment_xy = np.asarray([line["xyxy"] for line in segments], dtype=float).reshape(-1, 4)
+    starts, ends = segment_xy[:, :2], segment_xy[:, 2:]
+    directions = ends - starts
+    lengths_squared = np.sum(directions ** 2, axis=1)
+    angles = np.asarray([line["angle_deg"] for line in segments])
+    slots = []
+    for sid, polygon in zip(slot_ids, polygons):
+        edge_support, edge_lengths = [], []
+        for start, end in zip(polygon, np.roll(polygon, -1, axis=0)):
+            vector = end - start
+            length = float(np.linalg.norm(vector))
+            angle = float(np.degrees(np.arctan2(vector[1], vector[0])) % 180)
+            # Midpoint samples represent equal-length bins on this finite polygon edge.
+            bins = max(1, int(np.ceil(length / 2.0)))
+            points = start + ((np.arange(bins) + 0.5) / bins)[:, None] * vector
+            supported = np.zeros(bins, dtype=bool)
+            aligned = np.flatnonzero(_geometry_angle_difference(angles, angle)
+                                     <= cfg["angle_tolerance_deg"])
+            for index in aligned:
+                delta = points - starts[index]
+                t = np.clip((delta @ directions[index]) / lengths_squared[index], 0, 1)
+                nearest = starts[index] + t[:, None] * directions[index]
+                close = np.linalg.norm(points - nearest, axis=1) <= cfg["boundary_distance"]
+                supported |= close
+                if close.any():
+                    segments[index]["supports_boundary"] = True
+            edge_support.append(float(np.mean(supported)))
+            edge_lengths.append(length)
+        count = sum(value >= cfg["min_edge_support"] for value in edge_support)
+        coverage = float(np.average(edge_support, weights=edge_lengths))
+        flag = ("supported" if count >= cfg["min_supported_edges"] else
+                "limited_support" if coverage > 0 else "no_support")
+        slots.append({"space_id": sid, "boundary_support": coverage,
+                      "edge_support": edge_support, "supported_edges": count,
+                      "quality_flag": flag})
+    return {"config": cfg, "raw_line_count": len(raw_lines), "segments": segments,
+            "slots": slots, "quality_counts": {
+                flag: sum(slot["quality_flag"] == flag for slot in slots)
+                for flag in ("supported", "limited_support", "no_support")},
+            "images": {"gray": gray, "blurred": blurred, "edges": edges,
+                       "roi": roi, "roi_edges": roi_edges}}
+
+
 def prepare_main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--raw", default="data/raw")
@@ -1020,7 +1197,6 @@ def evaluation_main(argv=None):
 def main(argv=None):
     parser = argparse.ArgumentParser(description="PKLot single-file pipeline")
     parser.add_argument("command", choices=["prepare", "audit", "splits", "evaluate"])
-    import sys
     argv = list(sys.argv[1:] if argv is None else argv)
     args = parser.parse_args(argv[:1])
     {"prepare":prepare_main,"audit":audit_main,"splits":project_splits_main,"evaluate":evaluation_main}[args.command](argv[1:])
