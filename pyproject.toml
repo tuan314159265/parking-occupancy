@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "parking-occupancy"
 version = "0.1.0"
 requires-python = ">=3.10"
-dependencies = ["Pillow>=10,<13"]
+dependencies = ["Pillow>=10,<13", "numpy>=1.26,<3", "opencv-python-headless>=4.10,<5"]
 
 [project.scripts]
 parking-audit = "parking_occupancy.pklot:main"
