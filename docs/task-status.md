@@ -14,3 +14,7 @@ Mã xử lý được gom vào parking_module.py tại gốc repository. Noteboo
 ## 31/10/2026 — task 3
 
 Đã rà dữ liệu, cập nhật loader v2, audit lại, khóa configs/pklot_v1.json và xuất train/val/test cùng JSON layout. Thí nghiệm chính 1.182/270/270 frame; chuyển UFPR04 → UFPR05 có 420/90/90. Notebook 3.2 tải manifest dùng chung từ GitHub. Xem docs/dataset-protocol.md để biết thống kê và kiểm chứng. Phần split dữ liệu đã có; các phương pháp và đánh giá thực nghiệm vẫn là bước tiếp theo.
+
+## 04/11/2026 — task 11
+
+Đã hiện thực evaluator chung, ghép khóa ảnh/ô, xử lý unknown/missing, confusion matrix, precision/recall/F1, accuracy tổng, coverage, tỉ lệ báo trống sai, MAE đếm, timing theo ảnh gốc và xuất JSON/CSV. Có phân nhóm camera/thời tiết, FrameTimer cho nhiều tile, CLI và notebook 6.1. Công thức được kiểm chứng bằng ví dụ nhỏ; đây là hạ tầng đánh giá, chưa phải kết quả thực nghiệm của task 12/13.

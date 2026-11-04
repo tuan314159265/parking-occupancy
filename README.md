@@ -118,3 +118,9 @@ Kết nối Drive, cài Pillow và tải/import module vẫn chạy khi Run All;
 Task 3 đã có bộ `pklot_v1`: **1.182/270/270** frame train/validation/test cho thí nghiệm chính và **420/90/90** cho chuyển góc nhìn UFPR04 → UFPR05. Notebook mục **3.2** tự tải cùng bộ manifest/JSON vùng ô từ GitHub và kiểm tra checksum; không chia lại ngẫu nhiên theo từng người. Cấu hình tại `configs/pklot_v1.json`, metadata nhẹ tại `data/manifests/pklot_v1/`; ảnh/XML vẫn nằm ngoài Git.
 
 Xem [giao thức dữ liệu](docs/dataset-protocol.md) để dùng manifest, đọc layout theo geometry_id và tái lập split. Loader v2 hỗ trợ Point/point, lấy ngày từ tên ảnh và giữ ngày thư mục để truy vết. Cache audit v1 cần chạy lại một lần sau khi nâng module để cập nhật metadata; không tải lại ảnh.
+
+## Bộ đánh giá dùng chung
+
+Notebook mục **6.1** đã có evaluator cho các phương pháp: `evaluate_occupancy`, `FrameTimer`, `export_evaluation` và `evaluator_self_check`. Ghép dự đoán theo ảnh/ô, báo coverage, tính unknown là sai trong accuracy tổng, có F1/precision/recall, ma trận nhầm lẫn, tỉ lệ báo trống sai, MAE đếm và thời gian trên ảnh gốc. Xuất JSON và CSV theo nhóm camera/thời tiết. Xem [công thức, schema và ví dụ tính tay](docs/evaluation.md).
+
+Chạy `python parking_module.py evaluate --help` để xem CLI. Cell self-check chỉ kiểm chứng trên dữ liệu nhân tạo; chưa có dự đoán thật thì không tạo kết quả thực nghiệm.

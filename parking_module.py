@@ -43,7 +43,7 @@ class VehicleDetector(Protocol):
 class OccupancyPrediction:
     sample_id: str
     space_id: str
-    occupied_score: float
+    occupied_score: float | None
 
 
 """Strict full-frame PKLot loader and reproducible audit CLI."""
@@ -192,6 +192,336 @@ def occupancy_metrics(truth, predicted):
     div = lambda a,b: a/b if b else 0.0
     return dict(tp=tp, tn=tn, fp=fp, fn=fn, accuracy=div(tp+tn,len(truth)),
                 precision=div(tp,tp+fp), recall=div(tp,tp+fn), f1=div(2*tp,2*tp+fp+fn))
+
+
+# Shared occupancy evaluator: no detector-specific dependencies.
+from contextlib import contextmanager
+from numbers import Integral, Real
+import time
+
+
+def _eval_number(value, field, minimum=0, maximum=None):
+    if isinstance(value, bool) or not isinstance(value, Real) or not math.isfinite(value):
+        raise ValueError(f"{field} must be a finite number")
+    value = float(value)
+    if value < minimum or (maximum is not None and value > maximum):
+        raise ValueError(f"{field} outside allowed range")
+    return value
+
+
+def _eval_id(value, field):
+    if isinstance(value, bool) or not isinstance(value, (str, Integral)) or not str(value).strip():
+        raise ValueError(f"{field} must be a nonempty string or integer")
+    return str(value)
+
+
+def _eval_records(records):
+    return _read_jsonl(records) if isinstance(records, (str, Path)) else list(records)
+
+
+def _eval_state(value):
+    if value is None or (isinstance(value, str) and value == "unknown"):
+        return None
+    if isinstance(value, (bool, Integral)) and value in (0, 1):
+        return int(value)
+    if isinstance(value, str) and value in ("vacant", "occupied"):
+        return int(value == "occupied")
+    raise ValueError("state must be 0/vacant, 1/occupied or None/unknown")
+
+
+def _prediction_record(record, threshold):
+    record = asdict(record) if isinstance(record, OccupancyPrediction) else record
+    if not isinstance(record, dict):
+        raise ValueError("Each prediction must be a dictionary or OccupancyPrediction")
+    sample = _eval_id(record.get("sample_id"), "sample_id")
+    space = _eval_id(record.get("space_id", record.get("slot_id")), "space_id")
+    if "slot_id" in record and _eval_id(record["slot_id"], "slot_id") != space:
+        raise ValueError("slot_id and space_id disagree")
+    if "occupied_score" not in record and "state" not in record:
+        raise ValueError("Prediction must contain occupied_score or state")
+    score = record.get("occupied_score")
+    if score is not None:
+        score = _eval_number(score, "occupied_score", maximum=1)
+    if "state" in record:
+        predicted = _eval_state(record["state"])
+        if predicted is not None and score is not None and predicted != int(score >= threshold):
+            raise ValueError("state disagrees with occupied_score at the evaluation threshold")
+    else:
+        predicted = None if score is None else int(score >= threshold)
+    return (sample, space), dict(y_pred=predicted, occupied_score=score)
+
+
+def _classification_summary(slots):
+    # Rows: true vacant/occupied. Columns: predicted vacant/occupied/unknown.
+    matrix = [[0, 0, 0], [0, 0, 0]]
+    for row in slots:
+        matrix[row["y_true"]][2 if row["y_pred"] is None else row["y_pred"]] += 1
+    tn, fp, u_vacant = matrix[0]
+    fn, tp, u_occupied = matrix[1]
+    count = len(slots)
+    known = tp + tn + fp + fn
+    div = lambda a,b: a/b if b else 0.0
+    covered = dict(accuracy=div(tp+tn,known),precision=div(tp,tp+fp),
+                   recall=div(tp,tp+fn),f1=div(2*tp,2*tp+fp+fn))
+    return dict(slots=count,covered_slots=known,unknown_slots=count-known,
+                missing_predictions=sum(r["missing_prediction"] for r in slots),
+                occupied_support=tp+fn+u_occupied,vacant_support=tn+fp+u_vacant,
+                tp=tp,tn=tn,fp=fp,fn=fn,unknown_occupied=u_occupied,unknown_vacant=u_vacant,
+                coverage=div(known,count),accuracy=div(tp+tn,count),
+                precision=div(tp,tp+fp),recall=div(tp,tp+fn+u_occupied),
+                f1=div(2*tp,2*tp+fp+fn+u_occupied),
+                false_vacancy_rate=fn/(tp+fn+u_occupied) if tp+fn+u_occupied else None,
+                reported_vacancy_error_rate=fn/(tn+fn) if tn+fn else None,
+                covered_only=covered,
+                confusion_matrix=dict(true_labels=["vacant","occupied"],
+                    predicted_labels=["vacant","occupied","unknown"],values=matrix),
+                confusion_matrix_covered=[[tn,fp],[fn,tp]])
+
+
+def _eval_percentile(values, q):
+    values = sorted(values)
+    if not values:
+        return None
+    position = (len(values)-1)*q
+    low = int(position)
+    high = min(low+1,len(values)-1)
+    return values[low]+(values[high]-values[low])*(position-low)
+
+
+def _timing_summary(frames):
+    measured = [row for row in frames if row.get("timing") is not None]
+    result = dict(measured_frames=len(measured),total_frames=len(frames),
+                  coverage=len(measured)/len(frames) if frames else 0.0,
+                  missing_sample_ids=[r["sample_id"] for r in frames if r.get("timing") is None])
+    for name in ("preprocess_ms","model_ms","postprocess_ms","total_ms"):
+        result[name+"_mean"] = sum(r["timing"][name] for r in measured)/len(measured) if measured else None
+    totals = [r["timing"]["total_ms"] for r in measured]
+    result.update(total_ms_p50=_eval_percentile(totals,.5),total_ms_p95=_eval_percentile(totals,.95),
+                  total_ms_sum=sum(totals) if measured else None,
+                  inference_calls_sum=sum(r["timing"]["inference_calls"] for r in measured) if measured else None,
+                  inference_calls_mean=sum(r["timing"]["inference_calls"] for r in measured)/len(measured) if measured else None)
+    return result
+
+
+def _evaluation_group(slots, frames):
+    result = _classification_summary(slots)
+    result.update(frames=len(frames),
+                  mae_vacant_count=sum(r["absolute_vacant_count_error"] for r in frames)/len(frames),
+                  mae_occupied_count=sum(r["absolute_occupied_count_error"] for r in frames)/len(frames),
+                  complete_frame_coverage=sum(r["unknown_count"]==0 for r in frames)/len(frames),
+                  timing=_timing_summary(frames))
+    return result
+
+
+def evaluate_occupancy(manifest, predictions, timings=None, threshold=.5,
+                       missing_policy="unknown", method=None, metadata=None):
+    """Evaluate predictions by (sample_id, space_id), never list position.
+
+    Ground truth: frozen manifest rows (labels), audit rows (spaces), or Frame.
+    Prediction: occupied_score in [0,1] or state=0/1/None (unknown).
+    Missing rows are unknown by default; duplicates/unexpected keys always fail.
+    Main recall/F1 penalize unknown occupied slots; accuracy penalizes all unknowns.
+    """
+    threshold = _eval_number(threshold,"threshold",maximum=1)
+    if missing_policy not in ("unknown","error"):
+        raise ValueError("missing_policy must be unknown or error")
+    if metadata is not None and not isinstance(metadata,dict):
+        raise ValueError("metadata must be a JSON-compatible dictionary")
+    truth, expected = {}, {}
+    for source in _eval_records(manifest):
+        source = asdict(source) if isinstance(source, Frame) else source
+        if not isinstance(source,dict):
+            raise ValueError("Ground-truth rows must be dictionaries or Frame objects")
+        sample = _eval_id(source.get("sample_id"),"sample_id")
+        if sample in truth:
+            raise ValueError(f"Duplicate ground-truth sample: {sample}")
+        camera, weather = source.get("camera"), source.get("weather")
+        if not isinstance(camera,str) or not camera or not isinstance(weather,str) or not weather:
+            raise ValueError("Ground truth requires camera and weather")
+        labels = source.get("labels")
+        if labels is None:
+            spaces = source.get("spaces",[])
+            labels = {}
+            for space in spaces:
+                key = _eval_id(space.get("space_id"),"space_id")
+                if key in labels:
+                    raise ValueError("Duplicate ground-truth space id")
+                labels[key] = space.get("occupied")
+        if not isinstance(labels,dict) or not labels:
+            raise ValueError("Ground truth must contain nonempty labels or spaces")
+        truth[sample] = dict(sample_id=sample,camera=camera,weather=weather,date=source.get("date"))
+        for space,label in labels.items():
+            space = _eval_id(space,"space_id")
+            if not isinstance(label,(bool,Integral)) or label not in (0,1):
+                raise ValueError("Ground-truth labels must be binary; unknown truth is not allowed")
+            key = sample,space
+            if key in expected:
+                raise ValueError("Duplicate normalized ground-truth key")
+            expected[key] = int(label)
+    if not truth:
+        raise ValueError("Cannot evaluate an empty manifest")
+    predicted = {}
+    for record in _eval_records(predictions):
+        key,normalized = _prediction_record(record,threshold)
+        if key in predicted:
+            raise ValueError(f"Duplicate prediction: {key}")
+        if key not in expected:
+            raise ValueError(f"Prediction key not present in selected manifest: {key}")
+        predicted[key] = normalized
+    missing = set(expected)-set(predicted)
+    if missing and missing_policy == "error":
+        raise ValueError(f"Missing predictions for {len(missing)} slots")
+    time_by_sample = {}
+    if timings is not None:
+        for record in _eval_records(timings):
+            if not isinstance(record,dict):
+                raise ValueError("Timing records must be dictionaries")
+            sample = _eval_id(record.get("sample_id"),"sample_id")
+            if sample not in truth or sample in time_by_sample:
+                raise ValueError(f"Unexpected or duplicate timing sample: {sample}")
+            timing = {name:_eval_number(record.get(name),name) for name in
+                      ("preprocess_ms","model_ms","postprocess_ms","total_ms")}
+            if timing["total_ms"]+1e-6 < sum(timing[name] for name in ("preprocess_ms","model_ms","postprocess_ms")):
+                raise ValueError("total_ms must include preprocessing, all model calls and postprocessing")
+            calls = record.get("inference_calls")
+            if isinstance(calls,bool) or not isinstance(calls,Integral) or calls < 0:
+                raise ValueError("inference_calls must be a nonnegative integer")
+            timing["inference_calls"] = int(calls)
+            time_by_sample[sample] = timing
+    slots, by_frame = [], {sample:[] for sample in truth}
+    for key,label in sorted(expected.items()):
+        sample,space = key
+        prediction = predicted.get(key,dict(y_pred=None,occupied_score=None))
+        row = dict(truth[sample],space_id=space,y_true=label,**prediction,missing_prediction=key in missing)
+        slots.append(row)
+        by_frame[sample].append(row)
+    frames = []
+    for sample,rows in sorted(by_frame.items()):
+        actual_vacant = sum(r["y_true"]==0 for r in rows)
+        actual_occupied = len(rows)-actual_vacant
+        pred_vacant = sum(r["y_pred"]==0 for r in rows)
+        pred_occupied = sum(r["y_pred"]==1 for r in rows)
+        unknown = sum(r["y_pred"] is None for r in rows)
+        frames.append(dict(truth[sample],slots=len(rows),true_vacant_count=actual_vacant,
+            true_occupied_count=actual_occupied,predicted_vacant_count=pred_vacant,
+            predicted_occupied_count=pred_occupied,unknown_count=unknown,
+            vacant_count_lower=pred_vacant,vacant_count_upper=pred_vacant+unknown,
+            absolute_vacant_count_error=abs(pred_vacant-actual_vacant),
+            absolute_occupied_count_error=abs(pred_occupied-actual_occupied),timing=time_by_sample.get(sample)))
+    report = dict(schema_version=1,method=method,threshold=threshold,missing_policy=missing_policy,
+                  metadata={} if metadata is None else metadata,
+                  overall=_evaluation_group(slots,frames),per_frame=frames,per_slot=slots)
+    for name,fields in (("by_camera",("camera",)),("by_weather",("weather",)),("by_camera_weather",("camera","weather"))):
+        groups = {}
+        for values in sorted({tuple(r[f] for f in fields) for r in frames}):
+            group_frames = [r for r in frames if tuple(r[f] for f in fields)==values]
+            group_slots = [r for r in slots if tuple(r[f] for f in fields)==values]
+            groups["/".join(values)] = _evaluation_group(group_slots,group_frames)
+        report[name] = groups
+    return report
+
+
+class FrameTimer:
+    """Measure one original image, including repeated model stages for all tiles.
+
+    Supply a synchronize callback for asynchronous accelerators. Loading weights
+    and warm-up belong outside this timer; image loading belongs in preprocessing.
+    """
+    def __init__(self, sample_id, synchronize=None):
+        self.sample_id = _eval_id(sample_id,"sample_id")
+        self.synchronize = synchronize or (lambda:None)
+        self._started = self._finished = self._failed = self._active_stage = False
+        self._durations = {name:0.0 for name in ("preprocess","model","postprocess")}
+        self._calls = Counter()
+
+    def __enter__(self):
+        if self._started:
+            raise RuntimeError("Create a fresh FrameTimer for each original image")
+        self.synchronize()
+        self._start = time.perf_counter()
+        self._started = True
+        return self
+
+    @contextmanager
+    def stage(self, name):
+        if name not in self._durations or not self._started or self._finished or self._active_stage:
+            raise RuntimeError("Unknown, nested or inactive timing stage")
+        self._active_stage = True
+        self.synchronize()
+        start = time.perf_counter()
+        try:
+            yield
+            self.synchronize()
+        except BaseException:
+            self._failed = True
+            raise
+        finally:
+            self._durations[name] += (time.perf_counter()-start)*1000
+            self._calls[name] += 1
+            self._active_stage = False
+
+    def __exit__(self, exc_type, exc, tb):
+        self.synchronize()
+        self._total = (time.perf_counter()-self._start)*1000
+        self._finished = True
+        self._failed = self._failed or exc_type is not None
+        return False
+
+    def record(self, inference_calls=None):
+        if not self._finished or self._failed or any(self._calls[name]==0 for name in self._durations):
+            raise RuntimeError("Need one completed, successful frame and all three stages")
+        calls = self._calls["model"] if inference_calls is None else inference_calls
+        if isinstance(calls,bool) or not isinstance(calls,Integral) or calls < 0:
+            raise ValueError("inference_calls must be a nonnegative integer")
+        return dict(sample_id=self.sample_id,total_ms=self._total,inference_calls=int(calls),
+                    **{name+"_ms":value for name,value in self._durations.items()})
+
+
+def export_evaluation(report, output):
+    """Save aggregate JSON, per-frame CSV and aligned per-slot CSV/JSONL."""
+    import csv
+    output = Path(output)
+    output.mkdir(parents=True,exist_ok=True)
+    aggregate = {key:value for key,value in report.items() if key not in ("per_frame","per_slot")}
+    (output/"metrics.json").write_text(json.dumps(aggregate,ensure_ascii=False,allow_nan=False,indent=2)+"\n")
+    frames = []
+    for row in report["per_frame"]:
+        record = {key:value for key,value in row.items() if key != "timing"}
+        for key in ("preprocess_ms","model_ms","postprocess_ms","total_ms","inference_calls"):
+            record[key] = None if row["timing"] is None else row["timing"][key]
+        frames.append(record)
+    for filename,rows in (("per_frame.csv",frames),("per_slot.csv",report["per_slot"])):
+        with (output/filename).open("w",newline="") as stream:
+            writer = csv.DictWriter(stream,fieldnames=list(rows[0]))
+            writer.writeheader()
+            writer.writerows(rows)
+    with (output/"aligned_predictions.jsonl").open("w") as stream:
+        for row in report["per_slot"]:
+            stream.write(json.dumps(row,ensure_ascii=False,allow_nan=False)+"\n")
+    return output
+
+
+def evaluator_self_check():
+    """Two hand-calculated frames, including both types of unknown prediction."""
+    manifest = [dict(sample_id="A",camera="UFPR04",weather="sunny",labels={"1":1,"2":1,"3":0,"4":0}),
+                dict(sample_id="B",camera="UFPR05",weather="rainy",labels={"1":1,"2":0,"3":1})]
+    states = {"A":[1,0,0,None],"B":[None,1,1]}
+    predictions = [dict(sample_id=sample,space_id=str(i+1),state=state)
+                   for sample,values in states.items() for i,state in enumerate(values)]
+    timings = [dict(sample_id="A",preprocess_ms=10,model_ms=20,postprocess_ms=5,total_ms=40,inference_calls=1),
+               dict(sample_id="B",preprocess_ms=20,model_ms=80,postprocess_ms=10,total_ms=120,inference_calls=4)]
+    result = evaluate_occupancy(manifest,predictions,timings,method="synthetic_self_check")
+    metrics = result["overall"]
+    expected = dict(accuracy=3/7,coverage=5/7,precision=2/3,recall=1/2,f1=4/7,
+                    false_vacancy_rate=1/4,reported_vacancy_error_rate=1/2,mae_vacant_count=1/2)
+    if metrics["confusion_matrix"]["values"] != [[1,1,1],[1,2,1]]:
+        raise AssertionError("Hand-calculated confusion matrix does not match")
+    for key,value in expected.items():
+        if not math.isclose(metrics[key],value,rel_tol=1e-12):
+            raise AssertionError(f"Hand-calculated {key} does not match")
+    if metrics["timing"]["total_ms_mean"] != 80:
+        raise AssertionError("Timing must be per original frame, not per tile/model call")
+    return dict(passed=True,synthetic=True,expected=expected,confusion_matrix=[[1,1,1],[1,2,1]],total_ms_mean=80)
 
 
 """Download/resume official archive; safely extract full frames only; audit."""
@@ -663,13 +993,37 @@ def project_splits_main(argv=None):
     print(json.dumps({name:report["stats"] for name,report in lock["protocols"].items()},indent=2))
 
 
+def evaluation_main(argv=None):
+    parser = argparse.ArgumentParser(description="Evaluate parking occupancy by frame and slot keys")
+    parser.add_argument("--manifest",required=True)
+    parser.add_argument("--predictions",required=True,help="JSONL occupied_score or state records")
+    parser.add_argument("--timings",help="Optional JSONL timing per original image")
+    parser.add_argument("--threshold",type=float,default=.5)
+    parser.add_argument("--missing-policy",choices=["unknown","error"],default="unknown")
+    parser.add_argument("--method",default="unspecified")
+    parser.add_argument("--metadata",help="Optional JSON object with protocol, split, device and environment")
+    parser.add_argument("--output",default="outputs/evaluation")
+    args = parser.parse_args(argv)
+    metadata = json.loads(Path(args.metadata).read_text()) if args.metadata else {}
+    if not isinstance(metadata,dict):
+        raise ValueError("Metadata JSON must be an object")
+    metadata.update(manifest_sha256=hashlib.sha256(Path(args.manifest).read_bytes()).hexdigest(),
+                    predictions_sha256=hashlib.sha256(Path(args.predictions).read_bytes()).hexdigest())
+    if args.timings:
+        metadata["timings_sha256"] = hashlib.sha256(Path(args.timings).read_bytes()).hexdigest()
+    report = evaluate_occupancy(args.manifest,args.predictions,args.timings,args.threshold,
+                                args.missing_policy,args.method,metadata)
+    export_evaluation(report,args.output)
+    print(json.dumps(report["overall"],indent=2,allow_nan=False))
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description="PKLot single-file pipeline")
-    parser.add_argument("command", choices=["prepare", "audit", "splits"])
+    parser.add_argument("command", choices=["prepare", "audit", "splits", "evaluate"])
     import sys
     argv = list(sys.argv[1:] if argv is None else argv)
     args = parser.parse_args(argv[:1])
-    {"prepare":prepare_main,"audit":audit_main,"splits":project_splits_main}[args.command](argv[1:])
+    {"prepare":prepare_main,"audit":audit_main,"splits":project_splits_main,"evaluate":evaluation_main}[args.command](argv[1:])
 
 if __name__ == "__main__":
     main()

@@ -1,4 +1,4 @@
-# Giao diện phiên bản 0.2
+# Giao diện phiên bản 0.3
 
 `Frame`: sample_id là đường dẫn XML tương đối bỏ suffix; đường dẫn ảnh/XML tương đối dataset_root. Camera giữ nguyên tên thư mục (gồm PUC, PUCPR, UFPR04, UFPR05); date ISO theo timestamp tên file khi hợp lệ, directory_date giữ ngày thư mục và date_source ghi nguồn; Cloudy chuẩn hóa thành overcast. Có thể khôi phục metadata gốc qua xml_path.
 
@@ -6,9 +6,9 @@
 
 `VehicleDetector.predict(image_path) -> list[VehicleDetection]`: xyxy pixel ảnh gốc, confidence [0,1], class_name. Sau resize/letterbox phải chuyển về tọa độ gốc. Adapter chịu trách nhiệm kiểm tra đầu ra. Chưa chọn hay cài detector; cấu hình detector=null là chủ ý. Bước ghép detection với ô dùng polygon và xuất OccupancyPrediction, chưa triển khai trong hai đầu việc này.
 
-`OccupancyPrediction`: khóa (sample_id, space_id), occupied_score [0,1]. Bước đánh giá sau này phải join đúng khóa, phát hiện thiếu/trùng và chốt ngưỡng trên validation trước khi chạy test. Hàm occupancy_metrics nhận hai dãy binary đã căn chỉnh.
+`OccupancyPrediction`: khóa (sample_id, space_id), occupied_score [0,1] hoặc None cho chưa xác định. evaluate_occupancy ghép theo khóa, từ chối trùng/ngoài manifest, tính ô thiếu là unknown (hoặc báo lỗi khi missing_policy="error"). Dictionary dự đoán cũng nhận state=0/1/None và slot_id là alias của space_id. Chốt ngưỡng trên validation trước khi test. occupancy_metrics là helper nhị phân cũ; evaluate_occupancy là evaluator dùng chung.
 
-Đánh giá trạng thái ô: occupied là lớp dương, confusion matrix TP/TN/FP/FN, accuracy, precision, recall, F1 (mẫu số 0 trả 0). Báo cáo tổng và theo camera/thời tiết; không tính vehicle mAP từ XML PKLot. Cần nhãn hộp xe độc lập nếu đánh giá detector.
+Đánh giá trạng thái ô: occupied là lớp dương. Ma trận chính 2×3 giữ unknown; accuracy tổng coi unknown là sai, coverage báo tỉ lệ xác định. Recall/F1 chính phạt unknown trên ô có xe; covered_only để chẩn đoán. Có tỉ lệ báo trống sai với hai mẫu số, MAE đếm ô trống/có xe, và timing theo ảnh gốc gồm mọi tile. Báo tổng, theo camera/thời tiết. Chi tiết công thức và schema trong docs/evaluation.md; không tính vehicle mAP từ XML PKLot.
 
 Split chính thức của dự án: dùng manifest đã khóa ở data/manifests/pklot_v1/ và cấu hình configs/pklot_v1.json. Có within_camera và transfer_ufpr04_to_ufpr05; cùng ngày không giao nhau giữa train/val/test, camera đích không nằm trong train/validation của thí nghiệm chuyển camera. Cột split do split_for() của audit chỉ là xem trước, không dùng cho thực nghiệm. Xem docs/dataset-protocol.md về ngân sách, phiên bản và quy tắc chọn tập con.
 
