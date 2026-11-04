@@ -1133,6 +1133,184 @@ def analyze_parking_geometry(image_bgr, layout, config=None):
                        "roi": roi, "roi_edges": roi_edges}}
 
 
+def make_parking_tiles(image_bgr, layout, padding=32, grid=(2, 2), overlap=0.2,
+                       max_overlap=0.6, min_tile_size=256, output_size=None):
+    """Crop color parking tiles from the selected known polygon layout.
+
+    grid is (rows, columns), each at most two. Padding is original-image
+    pixels of context around each space, clipped at image edges. Overlap is
+    the shared strip as a fraction of the ROI dimension, increased as needed
+    up to max_overlap. Small axes use one tile; if full-space context cannot
+    fit under the overlap cap, return the full ROI as one tile.
+
+    output_size optionally specifies (width, height) for aspect-preserving
+    letterboxing; otherwise preserve native pixels. Bounds are xyxy image
+    edges, with right/bottom exclusive for slicing. Each tile contains its
+    BGR image and metadata for mapping coordinates, including actual rounded
+    resize scales and letterbox padding. No occupancy labels are read.
+    """
+    import cv2
+    import numpy as np
+
+    if (not isinstance(image_bgr, np.ndarray) or image_bgr.dtype != np.uint8
+            or image_bgr.ndim != 3 or image_bgr.shape[2] != 3):
+        raise ValueError("Expected a uint8 BGR image with three channels")
+    height, width = image_bgr.shape[:2]
+    if (width, height) != (layout["width"], layout["height"]):
+        raise ValueError("Image size differs from layout")
+    if (type(padding) is not int or padding < 0 or type(min_tile_size) is not int
+            or min_tile_size < 1 or len(grid) != 2
+            or any(type(n) is not int or n not in (1, 2) for n in grid)
+            or not 0 <= overlap <= max_overlap < 1):
+        raise ValueError("Invalid padding, grid, overlap or minimum tile size")
+    if output_size is not None and (len(output_size) != 2 or any(
+            type(n) is not int or n < 1 for n in output_size)):
+        raise ValueError("output_size must be positive integer (width, height)")
+    boxes, space_ids = [], []
+    for space in layout["spaces"]:
+        polygon = np.asarray(space["polygon"], dtype=float)
+        if (polygon.ndim != 2 or polygon.shape[1] != 2 or len(polygon) < 3
+                or not np.isfinite(polygon).all() or np.any(polygon < 0)
+                or np.any(polygon > [width, height])
+                or cv2.contourArea(polygon.astype(np.float32)) <= 0):
+            raise ValueError("Invalid parking-space polygon")
+        lo, hi = polygon.min(axis=0), polygon.max(axis=0)
+        boxes.append([*lo, *hi])
+        space_ids.append(str(space["space_id"]))
+    if not boxes or len(set(space_ids)) != len(space_ids):
+        raise ValueError("Expected nonempty layout with unique space IDs")
+    boxes = np.asarray(boxes)
+    context = boxes.copy()
+    context[:, :2] = np.maximum(0, boxes[:, :2] - padding)
+    context[:, 2:] = np.minimum([width, height], boxes[:, 2:] + padding)
+    roi = [int(np.floor(context[:, 0].min())), int(np.floor(context[:, 1].min())),
+           int(np.ceil(context[:, 2].max())), int(np.ceil(context[:, 3].max()))]
+    x0, y0, x1, y1 = roi
+    rows = grid[0] if y1 - y0 >= 2 * min_tile_size else 1
+    columns = grid[1] if x1 - x0 >= 2 * min_tile_size else 1
+    effective_overlap = float(overlap)
+    # For two end-anchored crops of length t, [a,b] fits if t >= min(b, L-a).
+    # This finds the overlap needed to retain each full space plus its context.
+    for axis, count, origin, length in ((0, columns, x0, x1 - x0),
+                                        (1, rows, y0, y1 - y0)):
+        if count == 2:
+            a = context[:, axis] - origin
+            b = context[:, axis + 2] - origin
+            required = float(np.max(2 * np.minimum(b, length - a) / length - 1))
+            effective_overlap = max(effective_overlap, required)
+    fallback_reason = None
+    if effective_overlap > max_overlap + 1e-12:
+        rows, columns = 1, 1
+        effective_overlap = 0.0
+        fallback_reason = "context_exceeds_max_overlap"
+    elif rows == columns == 1:
+        effective_overlap = 0.0
+    else:
+        effective_overlap = min(effective_overlap, float(max_overlap))
+
+    def intervals(start, end, count):
+        if count == 1:
+            return [(start, end)]
+        length = int(np.ceil((end - start) * (1 + effective_overlap) / 2))
+        return [(start, start + length), (end - length, end)]
+
+    def contained(bounds, candidates):
+        return ((candidates[:, 0] >= bounds[0]) & (candidates[:, 1] >= bounds[1])
+                & (candidates[:, 2] <= bounds[2]) & (candidates[:, 3] <= bounds[3]))
+
+    tiles = []
+    for row, (top, bottom) in enumerate(intervals(y0, y1, rows)):
+        for column, (left, right) in enumerate(intervals(x0, x1, columns)):
+            bounds = [left, top, right, bottom]
+            crop = image_bgr[top:bottom, left:right].copy()
+            crop_height, crop_width = crop.shape[:2]
+            scale_xy, pad = [1.0, 1.0], [0, 0, 0, 0]
+            if output_size is not None:
+                out_width, out_height = output_size
+                scale = min(out_width / crop_width, out_height / crop_height)
+                resized_width = min(out_width, max(1, int(round(crop_width * scale))))
+                resized_height = min(out_height, max(1, int(round(crop_height * scale))))
+                resized = cv2.resize(crop, (resized_width, resized_height),
+                                     interpolation=cv2.INTER_AREA if scale < 1 else cv2.INTER_LINEAR)
+                pad_left = (out_width - resized_width) // 2
+                pad_top = (out_height - resized_height) // 2
+                pad = [pad_left, pad_top, out_width - resized_width - pad_left,
+                       out_height - resized_height - pad_top]
+                crop = cv2.copyMakeBorder(resized, pad[1], pad[3], pad[0], pad[2],
+                                          cv2.BORDER_CONSTANT, value=(114, 114, 114))
+                scale_xy = [resized_width / crop_width, resized_height / crop_height]
+            metadata = {
+                "tile_id": f"r{row}c{column}", "bounds_xyxy": bounds,
+                "offset_xy": [left, top], "source_size": [crop_width, crop_height],
+                "output_size": [crop.shape[1], crop.shape[0]], "scale_xy": scale_xy,
+                "padding_ltrb": pad,
+                "space_ids": [sid for sid, ok in zip(space_ids, contained(bounds, boxes)) if ok],
+                "context_space_ids": [sid for sid, ok in zip(space_ids, contained(bounds, context)) if ok],
+            }
+            tiles.append({"image": crop, "metadata": metadata})
+    coverage = {
+        sid: {"tile_ids": [t["metadata"]["tile_id"] for t in tiles if sid in t["metadata"]["space_ids"]],
+              "context_tile_ids": [t["metadata"]["tile_id"] for t in tiles if sid in t["metadata"]["context_space_ids"]]}
+        for sid in space_ids
+    }
+    all_covered = all(item["tile_ids"] for item in coverage.values())
+    all_context_covered = all(item["context_tile_ids"] for item in coverage.values())
+    if not all_covered or not all_context_covered:
+        raise RuntimeError("Tile layout does not cover every full parking space and its context")
+    return {"roi_bounds_xyxy": roi, "requested_grid": list(grid), "grid": [rows, columns],
+            "requested_overlap": float(overlap), "effective_overlap": effective_overlap,
+            "context_padding_px": padding, "fallback_reason": fallback_reason,
+            "all_spaces_covered": all_covered, "all_context_covered": all_context_covered,
+            "coverage": coverage, "tiles": tiles}
+
+
+def _transform_tile_points(points, metadata, to_image):
+    import numpy as np
+
+    points = np.asarray(points, dtype=float)
+    scale = np.asarray(metadata["scale_xy"], dtype=float)
+    offset = np.asarray(metadata["offset_xy"], dtype=float)
+    pad = np.asarray(metadata["padding_ltrb"], dtype=float)
+    if (points.ndim < 1 or points.shape[-1] != 2 or not np.isfinite(points).all()
+            or scale.shape != (2,) or offset.shape != (2,) or pad.shape != (4,)
+            or not np.isfinite(scale).all() or not np.isfinite(offset).all()
+            or not np.isfinite(pad).all() or np.any(scale <= 0) or np.any(pad < 0)):
+        raise ValueError("Expected finite (...,2) points and valid tile transform metadata")
+    if to_image:
+        return (points - pad[:2]) / scale + offset
+    return (points - offset) * scale + pad[:2]
+
+
+def tile_points_to_image(points, metadata):
+    """Map (...,2) tile coordinates to original image edges, without clipping."""
+    return _transform_tile_points(points, metadata, to_image=True)
+
+
+def image_points_to_tile(points, metadata):
+    """Map (...,2) original image coordinates to tile edges, without clipping."""
+    return _transform_tile_points(points, metadata, to_image=False)
+
+
+def tile_boxes_to_image(boxes, metadata, clip=False):
+    """Map (...,4) xyxy boxes to the original image using the tile metadata.
+
+    Optional clipping removes letterbox overflow at the source crop bounds.
+    A box entirely in padding can become zero-area; filter those downstream.
+    """
+    import numpy as np
+
+    boxes = np.asarray(boxes, dtype=float)
+    if (boxes.ndim < 1 or boxes.shape[-1] != 4 or not np.isfinite(boxes).all()
+            or np.any(boxes[..., 2:] < boxes[..., :2])):
+        raise ValueError("Expected finite ordered (...,4) xyxy boxes")
+    mapped = tile_points_to_image(boxes.reshape(-1, 2), metadata).reshape(boxes.shape)
+    if clip:
+        bounds = metadata["bounds_xyxy"]
+        mapped[..., [0, 2]] = np.clip(mapped[..., [0, 2]], bounds[0], bounds[2])
+        mapped[..., [1, 3]] = np.clip(mapped[..., [1, 3]], bounds[1], bounds[3])
+    return mapped
+
+
 def prepare_main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--raw", default="data/raw")
