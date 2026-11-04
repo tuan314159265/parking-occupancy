@@ -18,3 +18,7 @@ Mã xử lý được gom vào parking_module.py tại gốc repository. Noteboo
 ## 04/11/2026 — task 11
 
 Đã hiện thực evaluator chung, ghép khóa ảnh/ô, xử lý unknown/missing, confusion matrix, precision/recall/F1, accuracy tổng, coverage, tỉ lệ báo trống sai, MAE đếm, timing theo ảnh gốc và xuất JSON/CSV. Có phân nhóm camera/thời tiết, FrameTimer cho nhiều tile, CLI và notebook 6.1. Công thức được kiểm chứng bằng ví dụ nhỏ; đây là hạ tầng đánh giá, chưa phải kết quả thực nghiệm của task 12/13.
+
+## 04/11/2026 — task 15
+
+Đã viết mục tiêu, input/output, phạm vi camera cố định, phân biệt phát hiện xe và trạng thái ô; mô tả PKLot, nhãn/polygon, kiểm tra chất lượng, tập con và giao thức theo ngày/camera. Nội dung ở docs/introduction-and-data.md, report/sections/introduction.tex và data.tex; đã tích hợp vào notebook mục 1 và 3. Đây là phần mở đầu/dữ liệu, các mục phương pháp/kết quả của báo cáo vẫn chờ hoàn thiện.

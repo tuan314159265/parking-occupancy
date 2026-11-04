@@ -124,3 +124,16 @@ Xem [giao thức dữ liệu](docs/dataset-protocol.md) để dùng manifest, đ
 Notebook mục **6.1** đã có evaluator cho các phương pháp: `evaluate_occupancy`, `FrameTimer`, `export_evaluation` và `evaluator_self_check`. Ghép dự đoán theo ảnh/ô, báo coverage, tính unknown là sai trong accuracy tổng, có F1/precision/recall, ma trận nhầm lẫn, tỉ lệ báo trống sai, MAE đếm và thời gian trên ảnh gốc. Xuất JSON và CSV theo nhóm camera/thời tiết. Xem [công thức, schema và ví dụ tính tay](docs/evaluation.md).
 
 Chạy `python parking_module.py evaluate --help` để xem CLI. Cell self-check chỉ kiểm chứng trên dữ liệu nhân tạo; chưa có dự đoán thật thì không tạo kết quả thực nghiệm.
+
+## Phần mở đầu và dữ liệu của báo cáo
+
+Nội dung task 15 có ở [bản Markdown](docs/introduction-and-data.md), notebook mục **1** và **3**, cùng hai phần LaTeX trong `report/sections/`. Số liệu lấy từ audit và split đã khóa của pklot_v1; nguồn PKLot được trích dẫn riêng. Biên dịch bản nháp từ repo root:
+
+```bash
+mkdir -p outputs/report
+cd report
+pdflatex -interaction=nonstopmode -halt-on-error -output-directory=../outputs/report main.tex
+pdflatex -interaction=nonstopmode -halt-on-error -output-directory=../outputs/report main.tex
+```
+
+PDF ở `outputs/report/main.pdf`, nằm ngoài Git. Báo cáo hiện chưa có nội dung phương pháp/kết quả đầy đủ.
