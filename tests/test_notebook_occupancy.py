@@ -1,8 +1,10 @@
 """Run occupancy notebook cells with real images and deterministic detections."""
 import importlib.util
+import hashlib
 import json
 from pathlib import Path
 import tempfile
+from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 
@@ -39,6 +41,11 @@ class OccupancyNotebookTests(unittest.TestCase):
                               SLOT_GEOMETRIES={'layout': self.layout},
                               YOLO_FULL_VAL={'frame': detections}, HYBRID_VAL={'frame': detections},
                               cv2=cv2, np=np, plt=plt, Line2D=Line2D, json=json)
+        (self.root / 'val.jsonl').write_text(json.dumps(self.record) + '\n')
+        self.namespace.update(hashlib=hashlib, MANIFEST_DIR=self.root,
+                              PROJECT_DATASET_VERSION='test', provenance={'sha256': 'test'},
+                              FULLFRAME_DETECTOR=SimpleNamespace(config={'checkpoint': 'fake'}),
+                              HYBRID_CONFIG={'tiling': {}}, TEST_FRAMES=None)
         notebook = json.loads((REPO / 'notebooks/01_pklot_run_all.ipynb').read_text())
         self.cells = {c.get('id'): ''.join(c['source']) for c in notebook['cells']}
         self.addCleanup(plt.close, 'all')
@@ -63,6 +70,30 @@ class OccupancyNotebookTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'exactly'):
             self.execute('occupancy-code')
         self.assertFalse((self.root / 'outputs/occupancy/example/preview').exists())
+
+    def test_validation_selects_one_shared_config_and_exports_reports(self):
+        self.namespace['HYBRID_VAL']['frame'] = [
+            parking.VehicleDetection((3, 0, 13, 20), .7, 'car')]
+        self.execute('occupancy-code')
+        self.execute('validation-code')
+        directory = self.root / 'outputs/occupancy/example/validation'
+        frozen = json.loads((directory / 'frozen_config.json').read_text())
+        search = json.loads((directory / 'search.json').read_text())
+        self.assertEqual(len(search), 18)
+        winner = max(search, key=lambda row: (row['mean_f1'], row['mean_coverage'],
+                                             -row['mean_mae_vacant_count']))
+        self.assertEqual(frozen['config'], winner['config'])
+        self.assertEqual(frozen['selected_on'], 'val')
+        self.assertEqual(frozen['val_manifest_sha256'],
+                         hashlib.sha256((self.root / 'val.jsonl').read_bytes()).hexdigest())
+        self.assertNotEqual(frozen['detection_sha256']['yolo_fullframe'],
+                            frozen['detection_sha256']['yolo_hybrid'])
+        for method, frames in self.namespace['OCCUPANCY_VAL'].items():
+            self.assertEqual(frames['frame']['config'], frozen['config'])
+            report = parking.evaluate_occupancy([self.record], directory / method / 'predictions.jsonl')
+            self.assertEqual(report['overall']['f1'], winner['methods'][method]['f1'])
+            self.assertTrue(any((directory / method / 'evaluation').iterdir()))
+        self.assertIsNone(self.namespace['TEST_FRAMES'])
 
 
 if __name__ == '__main__':
