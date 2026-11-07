@@ -958,6 +958,58 @@ def read_project_frame(record, dataset_root):
     return frame
 
 
+def score_vehicle_spaces(detections, layout, lower_fraction=.5):
+    """Score original-image vehicle boxes against known convex space polygons.
+
+    The overlap is intersection area / lower-box area. Multiplying it by
+    detector confidence gives a ranking score, not an occupancy probability.
+    Labels are never read. No assignment or vacancy decision is made here.
+    NumPy/OpenCV remain lazy imports so the standalone data tools stay usable.
+    """
+    import cv2
+    import numpy as np
+
+    if isinstance(lower_fraction, bool) or not isinstance(lower_fraction, Real):
+        raise ValueError("lower_fraction must be a number in (0, 1]")
+    if not math.isfinite(lower_fraction) or not 0 < lower_fraction <= 1:
+        raise ValueError("lower_fraction must be a number in (0, 1]")
+    polygons = []
+    space_ids = []
+    for space in layout["spaces"]:
+        space_id = _eval_id(space["space_id"], "space_id")
+        if space_id in space_ids:
+            raise ValueError(f"Duplicate space_id: {space_id}")
+        polygon = np.asarray(space["polygon"], dtype=np.float32)
+        if (polygon.ndim != 2 or polygon.shape[1] != 2 or len(polygon) < 3
+                or not np.isfinite(polygon).all()
+                or not cv2.isContourConvex(polygon) or cv2.contourArea(polygon) <= 0):
+            raise ValueError(f"Space {space_id} must have a finite convex polygon")
+        space_ids.append(space_id)
+        polygons.append(polygon)
+
+    rows = []
+    for detection_index, detection in enumerate(detections):
+        box = np.asarray(detection.xyxy, dtype=np.float64)
+        if box.shape != (4,) or not np.isfinite(box).all():
+            raise ValueError("Vehicle boxes must contain four finite coordinates")
+        x1, y1, x2, y2 = map(float, box)
+        if x2 <= x1 or y2 <= y1:
+            raise ValueError("Vehicle boxes must have positive width and height")
+        confidence = _eval_number(detection.confidence, "confidence", maximum=1)
+        bottom_y = y2 - (y2 - y1) * lower_fraction
+        lower_box = np.array([[x1, bottom_y], [x2, bottom_y], [x2, y2], [x1, y2]],
+                             dtype=np.float32)
+        lower_area = cv2.contourArea(lower_box)
+        if not np.isfinite(lower_box).all() or lower_area <= 0:
+            raise ValueError("Vehicle lower box cannot be represented at this precision")
+        for space_id, polygon in zip(space_ids, polygons):
+            area, _ = cv2.intersectConvexConvex(lower_box, polygon)
+            overlap = min(1., max(0., float(area) / lower_area))
+            rows.append(dict(detection_index=detection_index, space_id=space_id,
+                             overlap=overlap, score=overlap * confidence))
+    return rows
+
+
 # Parking-line geometry. NumPy/OpenCV are imported when needed.
 # Pixel parameters target original 1280x720 PKLot frames; tune on train/val.
 DEFAULT_GEOMETRY_CONFIG = {
