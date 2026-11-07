@@ -1010,6 +1010,89 @@ def score_vehicle_spaces(detections, layout, lower_fraction=.5):
     return rows
 
 
+DEFAULT_OCCUPANCY_CONFIG = dict(
+    lower_fraction=.5, min_overlap=.3, min_score=.15,
+    ambiguity_margin=.05, nms_iou=.5,
+)
+
+
+def infer_parking_occupancy(sample_id, detections, layout, config=None):
+    """Apply identical geometric matching rules to either detector's output.
+
+    Class-agnostic NMS precedes matching. Each vehicle proposes its best space;
+    near-ties abstain. Competing proposals are resolved by descending score,
+    never forcing a vehicle into its second-choice space. Each vehicle and
+    space can participate in at most one accepted match.
+
+    Unassigned spaces with eligible overlap are unknown; others are vacant.
+    Vacancy assumes the detector did not miss a vehicle, not proof of emptiness.
+    `score` is geometric evidence, while `state` is the evaluator input.
+    Defaults are provisional and must be selected on validation before testing.
+    """
+    sample_id = _eval_id(sample_id, "sample_id")
+    cfg = dict(DEFAULT_OCCUPANCY_CONFIG)
+    if config is not None:
+        if set(config) - set(cfg):
+            raise ValueError("Unknown occupancy configuration keys")
+        cfg.update(config)
+    for key, value in cfg.items():
+        cfg[key] = _eval_number(value, key, maximum=1)
+    if any(cfg[key] == 0 for key in ("lower_fraction", "min_overlap", "min_score")):
+        raise ValueError("lower_fraction, min_overlap and min_score must be positive")
+    detections = list(detections)
+    rows = score_vehicle_spaces(detections, layout, cfg["lower_fraction"])
+
+    def iou(first, second):
+        a, b = first.xyxy, second.xyxy
+        intersection = max(0., min(a[2], b[2]) - max(a[0], b[0])) * max(
+            0., min(a[3], b[3]) - max(a[1], b[1]))
+        union = (a[2]-a[0])*(a[3]-a[1]) + (b[2]-b[0])*(b[3]-b[1]) - intersection
+        return intersection / union
+
+    # Coordinate/class tie-breaks make the decision independent of input order.
+    order = sorted(range(len(detections)), key=lambda i: (
+        -detections[i].confidence, tuple(detections[i].xyxy), detections[i].class_name))
+    kept = []
+    for index in order:
+        if not any(iou(detections[index], detections[j]) > cfg["nms_iou"] for j in kept):
+            kept.append(index)
+    by_detection = {index: [] for index in kept}
+    evidence = {str(s["space_id"]): 0. for s in layout["spaces"]}
+    uncertain = set()
+    for row in rows:
+        if row["detection_index"] not in by_detection:
+            continue
+        space_id = row["space_id"]
+        evidence[space_id] = max(evidence[space_id], row["score"])
+        if row["overlap"] >= cfg["min_overlap"] and row["score"] > 0:
+            uncertain.add(space_id)
+            by_detection[row["detection_index"]].append(row)
+    proposals = []
+    for index in kept:
+        candidates = sorted(by_detection[index], key=lambda r: (-r["score"], r["space_id"]))
+        if not candidates or candidates[0]["score"] < cfg["min_score"]:
+            continue
+        if len(candidates) > 1 and candidates[0]["score"] - candidates[1]["score"] <= cfg["ambiguity_margin"]:
+            continue
+        proposals.append(candidates[0])
+    matches = {}
+    for row in sorted(proposals, key=lambda r: (-r["score"], kept.index(r["detection_index"]))):
+        matches.setdefault(row["space_id"], row)
+    predictions = []
+    for space in layout["spaces"]:
+        space_id = str(space["space_id"])
+        match = matches.get(space_id)
+        state = "occupied" if match else "unknown" if space_id in uncertain else "vacant"
+        predictions.append(dict(
+            sample_id=sample_id, slot_id=space_id, score=evidence[space_id], state=state,
+            detection_index=match["detection_index"] if match else None,
+            match_score=match["score"] if match else None,
+        ))
+    return dict(predictions=predictions, config=cfg, kept_detection_indices=kept,
+                counts={state: sum(p["state"] == state for p in predictions)
+                        for state in ("occupied", "vacant", "unknown")})
+
+
 # Parking-line geometry. NumPy/OpenCV are imported when needed.
 # Pixel parameters target original 1280x720 PKLot frames; tune on train/val.
 DEFAULT_GEOMETRY_CONFIG = {
