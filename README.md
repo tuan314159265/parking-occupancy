@@ -137,3 +137,23 @@ pdflatex -interaction=nonstopmode -halt-on-error -output-directory=../outputs/re
 ```
 
 PDF ở `outputs/report/main.pdf`, nằm ngoài Git. Báo cáo hiện chưa có nội dung phương pháp/kết quả đầy đủ.
+
+## Pipeline tích hợp và trực quan hóa
+
+Notebook mục **5** ghép toàn bộ các phần: đọc ảnh → Canny/Hough (4.2) và cờ hình học yếu so với tham chiếu train → ROI/tile (4.3) → HOG/SVM (4.1) hoặc YOLO11n toàn ảnh/tile (4.4/4.5) → quy đổi box về ảnh gốc → ghép xe–ô (4.6). Mỗi ảnh có hình 6 panel và đầu ra CSV/JSON. Khi hình học yếu, pipeline thông báo và trả *unknown*, không tự coi ô là trống. Mục 6.2b khóa cấu hình trên validation, 6.3 chạy pipeline trên test, 7 tổng hợp bảng/biểu đồ. Chi tiết, review và kiểm chứng: [docs/pipeline-integration.md](docs/pipeline-integration.md).
+
+## Chạy notebook hoàn chỉnh trên Colab
+
+Notebook **không chứa mã của module**: cell ở mục 2 tải `parking_module.py`, và mục 3.2 tải manifest từ GitHub theo `OWNER/REPO/REF`. Vì vậy phải push code lên GitHub trước, rồi mới mở notebook.
+
+1. **Push** `main` lên `tuan314159265/parking-occupancy`, cần quyền ghi repo. Nếu push lên fork, sửa `OWNER` ở cell cấu hình mục 2.
+2. **Mở notebook:** Colab → File → Open notebook → tab GitHub → `tuan314159265/parking-occupancy` → `notebooks/01_pklot_run_all.ipynb`, hoặc bấm badge ở đầu notebook. Upload file `.ipynb` cũng chạy được, nhưng mở từ GitHub thì luôn đúng phiên bản.
+3. **Runtime → Change runtime type → GPU (T4)** để YOLO nhanh hơn. CPU vẫn chạy được nhưng lâu.
+4. **Cell cấu hình mục 2:**
+   - `REF = "main"`, hoặc commit SHA vừa push cho lần chạy chính thức.
+   - `PROTOCOL = "within_camera"`.
+   - Nếu nhóm đã có PKLot trên Drive, điền `SHARED_DATASET_DIR` (và `SHARED_AUDIT_DIR` nếu có). Nếu để trống, lần đầu notebook tự tải archive 4,9 GB và cần khoảng 10–15 GB trống trên Drive.
+5. **Runtime → Run all**, chọn tài khoản và **tất cả quyền** khi Colab hỏi quyền Drive.
+6. **Thời gian:** trích HOG khoảng 20 phút. Bước chọn `imgsz` ở 4.4 chạy validation 3 lần (640/960/1280). 4.5, 6.3 chạy pipeline của 3 phương pháp trên test. Nếu chỉ cần chạy thử, đặt `YOLO_IMGSZ_CANDIDATES = [640]` ở 4.4 và `PIPELINE_MAX_FRAMES = 30` ở 6.3. Kết quả chạy thử không dùng để báo cáo.
+7. **Kết quả** nằm ở `MyDrive/parking-occupancy/outputs/full/<PROTOCOL>/`. Bảng và nhận xét ở `pipeline/results/`, hình ở `pipeline/figures/`. Nếu runtime bị ngắt giữa chừng, dataset và audit trên Drive được dùng lại, chỉ cần Run All lần nữa.
+

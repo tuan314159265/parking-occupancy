@@ -188,11 +188,12 @@ class GeometryTests(unittest.TestCase):
                           camera=frame.camera, weather=frame.weather, split="train")
             namespace = dict(parking=module, TRAIN_FRAMES=[record],
                              SLOT_GEOMETRIES={geometry_id: layout},
-                             DATASET_DIR=root / "dataset", WORK_DIR=root, PROTOCOL="within_camera")
+                             DATASET_DIR=root / "dataset", WORK_DIR=root,
+                             OUTPUT_DIR=root / "outputs/full", PROTOCOL="within_camera")
             with patch.object(plt, "show"):
                 for name in ("environment-imports", "pklot-2", "geometry-config", "geometry-visualization", "geometry-demo"):
                     exec(compile(cells[name], name, "exec"), namespace)
-            exported = json.loads((root / "outputs/geometry/within_camera/geometry_results.json").read_text())
+            exported = json.loads((root / "outputs/full/within_camera/geometry/geometry_results.json").read_text())
             self.assertEqual(exported["results"][0]["geometry_id"], geometry_id)
             self.assertEqual(exported["results"][0]["slots"][0]["quality_flag"], "supported")
             self.assertNotIn("images", exported["results"][0])

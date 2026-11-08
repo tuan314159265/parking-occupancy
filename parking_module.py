@@ -1230,6 +1230,10 @@ def analyze_parking_geometry(image_bgr, layout, config=None):
     directions = ends - starts
     lengths_squared = np.sum(directions ** 2, axis=1)
     angles = np.asarray([line["angle_deg"] for line in segments])
+    # Bounding boxes allow skipping segments that cannot be within boundary_distance
+    # of an edge; the per-point test below is unchanged, so results are identical.
+    segment_low = np.minimum(starts, ends)
+    segment_high = np.maximum(starts, ends)
     slots = []
     for sid, polygon in zip(slot_ids, polygons):
         edge_support, edge_lengths = [], []
@@ -1241,8 +1245,12 @@ def analyze_parking_geometry(image_bgr, layout, config=None):
             bins = max(1, int(np.ceil(length / 2.0)))
             points = start + ((np.arange(bins) + 0.5) / bins)[:, None] * vector
             supported = np.zeros(bins, dtype=bool)
-            aligned = np.flatnonzero(_geometry_angle_difference(angles, angle)
-                                     <= cfg["angle_tolerance_deg"])
+            near_low = points.min(axis=0) - cfg["boundary_distance"]
+            near_high = points.max(axis=0) + cfg["boundary_distance"]
+            aligned = np.flatnonzero(
+                (_geometry_angle_difference(angles, angle) <= cfg["angle_tolerance_deg"])
+                & np.all(segment_high >= near_low, axis=1)
+                & np.all(segment_low <= near_high, axis=1))
             for index in aligned:
                 delta = points - starts[index]
                 t = np.clip((delta @ directions[index]) / lengths_squared[index], 0, 1)
@@ -1444,6 +1452,151 @@ def tile_boxes_to_image(boxes, metadata, clip=False):
         mapped[..., [0, 2]] = np.clip(mapped[..., [0, 2]], bounds[0], bounds[2])
         mapped[..., [1, 3]] = np.clip(mapped[..., [1, 3]], bounds[1], bounds[3])
     return mapped
+
+
+# Weak-geometry handling for the integrated pipeline.
+# analyze_parking_geometry reports absolute evidence; on real PKLot frames many
+# spaces never show painted lines on their XML polygon edges (often <60% are
+# "supported"), so absolute flags cannot mark a frame as unreliable. Quality is
+# therefore judged against a per-layout reference built from training images.
+DEFAULT_GEOMETRY_QUALITY_CONFIG = {
+    "reference_padding": 40,         # Pixels around the layout for shift estimation.
+    "reliable_supported_rate": 0.5,  # Space is checkable if "supported" in >=50% of references.
+    "lost_support_ratio": 0.35,      # Lines lost if support < 35% of the reference median.
+    "shift_tolerance_px": 6.0,       # Camera/layout shift beyond this is suspicious.
+    "min_segment_ratio": 0.25,       # Fewer segments than 25% of the reference median.
+}
+
+
+def _geometry_quality_config(config):
+    cfg = dict(DEFAULT_GEOMETRY_QUALITY_CONFIG)
+    if config is not None:
+        if set(config) - set(cfg):
+            raise ValueError("Unknown geometry quality configuration key")
+        cfg.update(config)
+    for key in ("reliable_supported_rate", "lost_support_ratio", "min_segment_ratio"):
+        cfg[key] = _eval_number(cfg[key], key, maximum=1)
+    cfg["shift_tolerance_px"] = _eval_number(cfg["shift_tolerance_px"], "shift_tolerance_px")
+    if type(cfg["reference_padding"]) is not int or cfg["reference_padding"] < 0:
+        raise ValueError("reference_padding must be a nonnegative integer")
+    return cfg
+
+
+def _gradient_magnitude(gray):
+    import cv2
+    import numpy as np
+
+    smooth = cv2.GaussianBlur(gray.astype(np.float32), (5, 5), 0)
+    return cv2.magnitude(cv2.Sobel(smooth, cv2.CV_32F, 1, 0), cv2.Sobel(smooth, cv2.CV_32F, 0, 1))
+
+
+def build_geometry_reference(images_bgr, layout, geometry_config=None, quality_config=None):
+    """Summarize one layout from reference (training) images; labels are never read.
+
+    Returns the median grayscale image (static scene for shift estimation), the
+    ROI used for it, the median retained-segment count and, per space, the rate
+    of "supported" flags and the median boundary_support.
+    """
+    import numpy as np
+
+    cfg = _geometry_quality_config(quality_config)
+    images = list(images_bgr)
+    if not images:
+        raise ValueError("At least one reference image is required")
+    grays, segment_counts, flags, supports = [], [], [], []
+    for image in images:
+        result = analyze_parking_geometry(image, layout, geometry_config)
+        grays.append(result["images"]["gray"])
+        segment_counts.append(len(result["segments"]))
+        flags.append({s["space_id"]: s["quality_flag"] for s in result["slots"]})
+        supports.append({s["space_id"]: s["boundary_support"] for s in result["slots"]})
+    points = np.concatenate([np.asarray(s["polygon"], dtype=float) for s in layout["spaces"]])
+    pad = cfg["reference_padding"]
+    roi = [max(0, int(np.floor(points[:, 0].min())) - pad), max(0, int(np.floor(points[:, 1].min())) - pad),
+           min(layout["width"], int(np.ceil(points[:, 0].max())) + pad),
+           min(layout["height"], int(np.ceil(points[:, 1].max())) + pad)]
+    space_ids = [str(s["space_id"]) for s in layout["spaces"]]
+    return {
+        "frames": len(images),
+        "gray": np.median(np.stack(grays), axis=0).astype(np.uint8),
+        "roi_bounds_xyxy": roi,
+        "segment_count_median": float(np.median(segment_counts)),
+        "slots": {sid: {"supported_rate": float(np.mean([f[sid] == "supported" for f in flags])),
+                        "median_support": float(np.median([s[sid] for s in supports]))}
+                  for sid in space_ids},
+        "quality_config": cfg,
+    }
+
+
+def assess_geometry_quality(geometry, reference=None, config=None):
+    """Flag weak geometry for one frame from analyze_parking_geometry output.
+
+    Frame flags: layout_shift_suspected (phase correlation of gradient images
+    against the reference exceeds shift_tolerance_px), few_line_segments.
+    Space flag: boundary_lost, only for spaces whose lines are usually
+    supported in the reference. Spaces that never show lines are not flagged.
+    Without a reference, no comparison is possible and nothing is flagged;
+    reference_available=False records that. Flags never imply vacancy.
+    """
+    import cv2
+    import math as _math
+    import numpy as np
+
+    cfg = _geometry_quality_config(config if config is not None else
+                                   (reference or {}).get("quality_config"))
+    result = {"reference_available": reference is not None, "frame_flags": [],
+              "camera_shift": None, "segment_count": len(geometry["segments"]),
+              "slot_flags": {}, "weak_slot_ids": []}
+    if reference is None:
+        return result
+    gray = geometry["images"]["gray"]
+    if gray.shape != reference["gray"].shape:
+        raise ValueError("Frame and reference have different image sizes")
+    x0, y0, x1, y1 = reference["roi_bounds_xyxy"]
+    window = cv2.createHanningWindow((x1 - x0, y1 - y0), cv2.CV_32F)
+    (dx, dy), response = cv2.phaseCorrelate(
+        _gradient_magnitude(reference["gray"][y0:y1, x0:x1]),
+        _gradient_magnitude(gray[y0:y1, x0:x1]), window)
+    if not all(_math.isfinite(v) for v in (dx, dy, response)):
+        dx = dy = response = 0.0  # Flat image: no measurable shift.
+    result["camera_shift"] = {"dx": float(dx), "dy": float(dy), "response": float(response)}
+    if _math.hypot(dx, dy) > cfg["shift_tolerance_px"]:
+        result["frame_flags"].append("layout_shift_suspected")
+    if len(geometry["segments"]) < cfg["min_segment_ratio"] * reference["segment_count_median"]:
+        result["frame_flags"].append("few_line_segments")
+    for slot in geometry["slots"]:
+        expected = reference["slots"].get(slot["space_id"])
+        if (expected is not None and expected["supported_rate"] >= cfg["reliable_supported_rate"]
+                and slot["quality_flag"] != "supported"
+                and slot["boundary_support"] < cfg["lost_support_ratio"] * expected["median_support"]):
+            result["slot_flags"][slot["space_id"]] = ["boundary_lost"]
+    result["weak_slot_ids"] = sorted(result["slot_flags"])
+    return result
+
+
+def apply_geometry_policy(predictions, quality, policy="unknown"):
+    """Never report a space as vacant when its geometry is weak.
+
+    policy="unknown": vacant predictions under a frame flag or a space flag
+    become unknown. policy="report_only" keeps states and only records reasons
+    (for ablation). Occupied and unknown predictions are never changed: a
+    detected vehicle is positive evidence regardless of line visibility.
+    Input dictionaries are not modified.
+    """
+    if policy not in ("unknown", "report_only"):
+        raise ValueError("policy must be 'unknown' or 'report_only'")
+    output, changed = [], []
+    for prediction in predictions:
+        row = dict(prediction)
+        space_id = _eval_id(row.get("space_id", row.get("slot_id")), "space_id")
+        reasons = list(quality["frame_flags"]) + list(quality["slot_flags"].get(space_id, []))
+        row["geometry_flags"] = reasons
+        if reasons and _eval_state(row.get("state")) == 0:
+            if policy == "unknown":
+                row["state"] = "unknown"
+                changed.append(space_id)
+        output.append(row)
+    return {"predictions": output, "changed_space_ids": changed, "policy": policy}
 
 
 def prepare_main(argv=None):

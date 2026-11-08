@@ -22,3 +22,8 @@ Mã xử lý được gom vào parking_module.py tại gốc repository. Noteboo
 ## 04/11/2026 — task 15
 
 Đã viết mục tiêu, input/output, phạm vi camera cố định, phân biệt phát hiện xe và trạng thái ô; mô tả PKLot, nhãn/polygon, kiểm tra chất lượng, tập con và giao thức theo ngày/camera. Nội dung ở docs/introduction-and-data.md, report/sections/introduction.tex và data.tex; đã tích hợp vào notebook mục 1 và 3. Đây là phần mở đầu/dữ liệu, các mục phương pháp/kết quả của báo cáo vẫn chờ hoàn thiện.
+
+## 08/11/2026 — tích hợp pipeline và trực quan hóa
+
+Đã review và merge nhánh feat/parking-line-geometry (4.2, 4.3, 4.6, 6.2 của Văn). Đã tăng tốc analyze_parking_geometry khoảng 23 lần với đầu ra không đổi, và giữ LF cho manifest trên Windows. Đã thêm cờ hình học yếu so với tham chiếu train (build_geometry_reference, assess_geometry_quality, apply_geometry_policy) cùng 11 test. Đã hoàn thiện notebook mục 5 (pipeline, hình 6 panel, CSV/JSON), 6.2b, 6.3, 7–9. Toàn bộ notebook đã chạy trên 141 ảnh PKLot thật lấy từ đầu archive, nhưng nhãn không khớp ảnh nên chưa có số liệu thực nghiệm; cần Run All trên Colab với dataset đầy đủ. Xem docs/pipeline-integration.md.
+

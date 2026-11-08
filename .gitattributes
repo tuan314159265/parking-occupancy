@@ -1,0 +1,2 @@
+# Frozen manifests are checksummed in split_lock.json; keep LF on every OS.
+data/manifests/** text eol=lf

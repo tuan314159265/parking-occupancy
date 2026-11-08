@@ -37,6 +37,7 @@ class OccupancyNotebookTests(unittest.TestCase):
         ])
         detections = [parking.VehicleDetection((0, 0, 10, 20), .4, 'car')]
         self.namespace = dict(parking=parking, WORK_DIR=self.root, DATASET_DIR=self.root,
+                              OUTPUT_DIR=self.root / 'outputs/full', Path=Path,
                               PROTOCOL='example', VAL_FRAMES=[self.record],
                               SLOT_GEOMETRIES={'layout': self.layout},
                               YOLO_FULL_VAL={'frame': detections}, HYBRID_VAL={'frame': detections},
@@ -59,7 +60,7 @@ class OccupancyNotebookTests(unittest.TestCase):
         results = self.namespace['OCCUPANCY_PREVIEW']
         self.assertEqual(results['yolo_fullframe'], results['yolo_hybrid'])
         for method in results:
-            path = self.root / 'outputs/occupancy/example/preview' / method / 'predictions.jsonl'
+            path = self.root / 'outputs/full/example/occupancy/preview' / method / 'predictions.jsonl'
             report = parking.evaluate_occupancy([self.record], path, missing_policy='error')
             self.assertEqual(report['overall']['accuracy'], 1)
             self.assertEqual(report['overall']['mae_vacant_count'], 0)
@@ -69,14 +70,14 @@ class OccupancyNotebookTests(unittest.TestCase):
         self.namespace['HYBRID_VAL'] = {}
         with self.assertRaisesRegex(ValueError, 'exactly'):
             self.execute('occupancy-code')
-        self.assertFalse((self.root / 'outputs/occupancy/example/preview').exists())
+        self.assertFalse((self.root / 'outputs/full/example/occupancy/preview').exists())
 
     def test_validation_selects_one_shared_config_and_exports_reports(self):
         self.namespace['HYBRID_VAL']['frame'] = [
             parking.VehicleDetection((3, 0, 13, 20), .7, 'car')]
         self.execute('occupancy-code')
         self.execute('validation-code')
-        directory = self.root / 'outputs/occupancy/example/validation'
+        directory = self.root / 'outputs/full/example/occupancy/validation'
         frozen = json.loads((directory / 'frozen_config.json').read_text())
         search = json.loads((directory / 'search.json').read_text())
         self.assertEqual(len(search), 18)
