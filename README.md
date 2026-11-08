@@ -42,7 +42,7 @@ python parking_module.py prepare
 python parking_module.py audit --root data/raw/PKLot --output outputs/full
 ```
 
-Không cần clone hay upload toàn bộ repository lên Colab. Notebook mặc định mount Google Drive của bạn và lưu archive, ảnh/XML cùng kết quả tại `MyDrive/parking-occupancy/`. Lần sau dùng lại dataset và manifest tương thích, bỏ qua tải/giải nén/audit toàn bộ. Nếu chưa có cache phù hợp, chỉ audit một lần; không cần provenance.json để nhận dataset đã giải nén. Đặt `USE_GOOGLE_DRIVE=False` nếu chỉ muốn dùng bộ nhớ tạm Colab. Repo GitHub: https://github.com/tuan314159265/parking-occupancy. Notebook đã điền sẵn tài khoản, tên repo và nhánh main. Notebook chưa chạy trên dịch vụ Colab thực tế.
+Không cần clone hay upload toàn bộ repository lên Colab. Notebook mặc định mount Google Drive của bạn và lưu archive, ảnh/XML cùng kết quả tại `MyDrive/parking-occupancy/`. Lần sau dùng lại dataset và manifest tương thích, bỏ qua tải/giải nén/audit toàn bộ. Nếu chưa có cache phù hợp, chỉ audit một lần; không cần provenance.json để nhận dataset đã giải nén. Đặt `USE_GOOGLE_DRIVE=False` nếu chỉ muốn dùng bộ nhớ tạm Colab. Repo GitHub: https://github.com/tuan314159265/parking-occupancy. Notebook đã điền sẵn tài khoản, tên repo và nhánh main. Notebook đã chạy trọn vẹn (Run All) trên Colab với giao thức within_camera; giao thức chuyển camera chưa chạy.
 
 ## Cấu trúc
 
