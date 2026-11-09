@@ -1,0 +1,163 @@
+{
+  "complete": true,
+  "counts": {
+    "train": 1182,
+    "val": 270
+  },
+  "engine_sha256": "698336db95e47902280d7438d7bdcd7b8c4dd1ad0b404c9a7f137e87a534a02a",
+  "environment": {
+    "device": "cpu",
+    "numpy": "2.5.4",
+    "opencv": "4.14.0",
+    "python": "3.14.7",
+    "skimage": "0.26.0",
+    "sklearn": "1.9.1",
+    "torch": "2.15.0+cpu",
+    "ultralytics": "8.4.0"
+  },
+  "manifests": {
+    "../slot_geometries.json": "a9b26e65a9729f0910f088ffd01f1b2263cc375a5a719d5e03b59208acbff0ff",
+    "../split_lock.json": "2827a11eb3f846d11f4487368bfde8d16d6a34e2afa326fe7d73dc0e13da04d9",
+    "test.jsonl": "f9d88dd35e94bc8dc1214b427e7c182ce7b14c3864bfeae6031c84ed0a0ba41f",
+    "train.jsonl": "7bd9a3e1682e2b3365abfb2ae23594a18d35eb813a4cc72d5dcc8d7c42892004",
+    "val.jsonl": "0ec49352106fce0fc5aa028305756ed6d57ea1d0d935fcf442074d7974604525"
+  },
+  "plan": {
+    "checkpoint": {
+      "filename": "yolo11n.pt",
+      "sha256": "0ebbc80d4a7680d14987a577cd21342b65ecfd94632bd9a8da63ae6417644ee1",
+      "url": "https://github.com/ultralytics/assets/releases/download/v8.3.0/yolo11n.pt"
+    },
+    "cpu_threads": 2,
+    "dataset_version": "pklot_v1",
+    "default": {
+      "confidence": 0.25,
+      "matching": {
+        "ambiguity_margin": 0.05,
+        "lower_fraction": 0.5,
+        "min_overlap": 0.3,
+        "min_score": 0.15,
+        "nms_iou": 0.5
+      },
+      "overlap": 0.2,
+      "padding": 32
+    },
+    "detector": {
+      "base_imgsz": 640,
+      "classes": [
+        "car",
+        "bus",
+        "truck"
+      ],
+      "confidence": [
+        0.15,
+        0.25
+      ],
+      "confidence_floor": 0.15,
+      "iou": 0.7,
+      "max_det": 300,
+      "rect": false
+    },
+    "experiment_id": "validation_v1",
+    "geometry": {
+      "angle_tolerance_deg": 12.0,
+      "boundary_distance": 6.0,
+      "canny_high": 150,
+      "canny_low": 50,
+      "gaussian_kernel": 5,
+      "gaussian_sigma": 1.2,
+      "hough_votes": 20,
+      "max_line_gap": 10,
+      "min_edge_support": 0.25,
+      "min_line_length": 20,
+      "min_roi_fraction": 0.9,
+      "min_supported_edges": 2,
+      "roi_margin": 8
+    },
+    "geometry_policy": "unknown",
+    "geometry_quality": {
+      "lost_support_ratio": 0.35,
+      "min_segment_ratio": 0.25,
+      "reference_padding": 40,
+      "reliable_supported_rate": 0.5,
+      "shift_tolerance_px": 6.0
+    },
+    "hog": {
+      "C": [
+        0.01,
+        0.1,
+        1.0
+      ],
+      "config": {
+        "block_size": [
+          16,
+          16
+        ],
+        "block_stride": [
+          8,
+          8
+        ],
+        "cell_size": [
+          8,
+          8
+        ],
+        "nbins": 9,
+        "win_size": [
+          64,
+          128
+        ]
+      },
+      "max_iter": 20000,
+      "thresholds": [
+        -0.25,
+        0.0,
+        0.25
+      ]
+    },
+    "hybrid": {
+      "edge_margin_px": 4,
+      "global_nms_iou": 0.5,
+      "grid": [
+        2,
+        2
+      ],
+      "max_overlap": 0.6,
+      "min_box_size_px": 2,
+      "min_tile_size": 256,
+      "overlap": [
+        0.2,
+        0.4
+      ],
+      "padding": [
+        16,
+        32
+      ]
+    },
+    "matching": {
+      "ambiguity_margin": [
+        0.0,
+        0.05
+      ],
+      "lower_fraction": [
+        0.33,
+        0.5,
+        0.67
+      ],
+      "min_overlap": [
+        0.2,
+        0.3,
+        0.4
+      ],
+      "min_score": 0.15,
+      "nms_iou": 0.5
+    },
+    "protocol": "within_camera",
+    "reference_frames": 15,
+    "schema_version": 1,
+    "seed": 42,
+    "selection_rule": "Shared confidence/matching for all YOLO arms; rank joint mean F1, coverage, negative vacant MAE, lower hybrid tensor pixels, original grid order. HOG: F1, coverage, negative MAE, smaller C, threshold closest to zero. No test inference.",
+    "ultralytics_version": "8.4.0"
+  },
+  "run_key": "b38fe9f03cc52d52c5cb7ee0fc76f31a7ecec62ff988af4ffc1c6d4e5989584f",
+  "test_inference_performed": false
+}

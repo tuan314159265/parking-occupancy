@@ -101,3 +101,7 @@ Các phần khác của mục 5:
 1. Push `main` (có `parking_module.py` mới) lên GitHub. Notebook tải module từ `REF`.
 2. Trên Colab: **Runtime → Run all** (chi tiết ở README, mục "Chạy notebook hoàn chỉnh trên Colab"). Có thể đặt `PIPELINE_MAX_FRAMES = 30` ở 6.3 để chạy thử nhanh; kết quả lúc đó được ghi `partial_run: true`.
 3. Đầu ra pipeline nằm ở `OUTPUT_DIR/<PROTOCOL>/pipeline/`: `geometry_reference/`, `demo/`, `val/`, `test/`, `figures/`, `results/`, `locked_config.json`, `run_manifest.json`.
+
+## 6. Cập nhật 09/11/2026: validation chính thức
+
+Task 12 bổ sung runner độc lập, grid giới hạn, đối chứng toàn ảnh khớp pixel, khóa bằng checksum và cổng test rõ ràng. Mặc định VALIDATION_ONLY_MODE=True để bỏ demo nặng bị trùng; RUN_FINAL_TEST=False. Các cell/hàm minh họa cũ vẫn giữ khi cần chạy riêng. Số liệu thật và lịch sử test cũ xem reports/validation_v1/README.md; hướng dẫn hiện hành ở docs/validation.md. Các kết quả/giới hạn mô tả bên trên là lịch sử lần tích hợp cũ, không thay thế báo cáo validation mới.

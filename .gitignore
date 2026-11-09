@@ -9,3 +9,6 @@ outputs/*
 *.aux
 *.log
 *.out
+
+.venv*/
+models/

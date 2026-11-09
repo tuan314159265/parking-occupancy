@@ -140,7 +140,7 @@ PDF ở `outputs/report/main.pdf`, nằm ngoài Git. Báo cáo hiện chưa có 
 
 ## Pipeline tích hợp và trực quan hóa
 
-Notebook mục **5** ghép toàn bộ các phần: đọc ảnh → Canny/Hough (4.2) và cờ hình học yếu so với tham chiếu train → ROI/tile (4.3) → HOG/SVM (4.1) hoặc YOLO11n toàn ảnh/tile (4.4/4.5) → quy đổi box về ảnh gốc → ghép xe–ô (4.6). Mỗi ảnh có hình 6 panel và đầu ra CSV/JSON. Khi hình học yếu, pipeline thông báo và trả *unknown*, không tự coi ô là trống. Mục 6.2b khóa cấu hình trên validation, 6.3 chạy pipeline trên test, 7 tổng hợp bảng/biểu đồ. Chi tiết, review và kiểm chứng: [docs/pipeline-integration.md](docs/pipeline-integration.md).
+Notebook mục **5** ghép toàn bộ các phần: đọc ảnh → Canny/Hough (4.2) và cờ hình học yếu so với tham chiếu train → ROI/tile (4.3) → HOG/SVM (4.1) hoặc YOLO11n toàn ảnh/tile (4.4/4.5) → quy đổi box về ảnh gốc → ghép xe–ô (4.6). Mỗi ảnh có hình 6 panel và đầu ra CSV/JSON. Khi hình học yếu, pipeline thông báo và trả *unknown*, không tự coi ô là trống. Luồng demo cũ được giữ để tham khảo; luồng validation chính thức hiện ở 6.2 dùng plan giới hạn và đối chứng pixel. Mục 6.3 chỉ chạy test khi RUN_FINAL_TEST=True và khóa đã được kiểm tra; mục 7 tổng hợp số liệu sẵn có. Chi tiết, review và kiểm chứng: [docs/pipeline-integration.md](docs/pipeline-integration.md).
 
 ## Chạy notebook hoàn chỉnh trên Colab
 
@@ -154,6 +154,14 @@ Notebook **không chứa mã của module**: cell ở mục 2 tải `parking_mod
    - `PROTOCOL = "within_camera"`.
    - Nếu nhóm đã có PKLot trên Drive, điền `SHARED_DATASET_DIR` (và `SHARED_AUDIT_DIR` nếu có). Nếu để trống, lần đầu notebook tự tải archive 4,9 GB và cần khoảng 10–15 GB trống trên Drive.
 5. **Runtime → Run all**, chọn tài khoản và **tất cả quyền** khi Colab hỏi quyền Drive.
-6. **Thời gian:** trích HOG khoảng 20 phút. Bước chọn `imgsz` ở 4.4 chạy validation 3 lần (640/960/1280). 4.5, 6.3 chạy pipeline của 3 phương pháp trên test. Nếu chỉ cần chạy thử, đặt `YOLO_IMGSZ_CANDIDATES = [640]` ở 4.4 và `PIPELINE_MAX_FRAMES = 30` ở 6.3. Kết quả chạy thử không dùng để báo cáo.
-7. **Kết quả** nằm ở `MyDrive/parking-occupancy/outputs/full/<PROTOCOL>/`. Bảng và nhận xét ở `pipeline/results/`, hình ở `pipeline/figures/`. Nếu runtime bị ngắt giữa chừng, dataset và audit trên Drive được dùng lại, chỉ cần Run All lần nữa.
+6. **Chế độ mặc định:** VALIDATION_ONLY_MODE=True, các demo nặng ở 4–5 được bỏ qua; mục 6.2 tự chạy HOG, YOLO toàn ảnh, hybrid và đối chứng toàn ảnh khớp pixel. CPU có thể mất nhiều thời gian; xem tiến độ theo số ảnh. RUN_FINAL_TEST=False nên Run All không tự chạy test. Để smoke-test, dùng CLI với giới hạn frame vào thư mục riêng; kết quả thiếu dữ liệu không tạo khóa test.
+7. **Kết quả** đồng bộ tới `MyDrive/parking-occupancy/outputs/full/<PROTOCOL>/validation_v1/`. Bảng ở comparison.csv, khóa ở locked_config.json. Dataset và audit trên Drive được dùng lại. Feature/detection cache lớn chỉ giữ local; runtime bị xóa giữa lượt chạy có thể cần trích feature/inference lại. Xem docs/validation.md về giới hạn cache.
 
+
+## Validation và khóa tham số (task 12)
+
+Luồng mới dùng `configs/validation_v1.json`: 9 cấu hình HOG/SVM, 144 tổ hợp padding/overlap/ngưỡng chung cho YOLO toàn ảnh, hybrid và toàn ảnh có pixel tensor khớp tiling. Tất cả cấu hình không cải thiện đều được lưu. Chạy `python parking_module.py validate --help` hoặc notebook mục **6.2**, mặc định `VALIDATION_ONLY_MODE=True` để bỏ các demo nặng bị trùng. `RUN_FINAL_TEST=False` tránh chạy test tự động.
+
+Xem [giao thức validation, cache và khóa trước test](docs/validation.md). Đầu ra chính là comparison.csv, detector_search.json, hog_search.json và locked_config.json trong outputs/validation_v1 (CLI) hoặc OUTPUT_DIR/PROTOCOL/validation_v1 (Colab). Không coi số liệu validation đã dùng chọn tham số là kết quả test độc lập.
+
+Kết quả validation CPU thực tế đã được lưu tại [reports/validation_v1](reports/validation_v1/README.md), gồm bảng, biểu đồ, toàn bộ 153 cấu hình và khóa. Đây là giao thức within_camera; chưa chạy lại test hoặc validation chuyển camera. Lịch sử test cũ được ghi rõ trong báo cáo. Cache/source/model được kiểm tra khi dùng lại lượt đã hoàn tất.

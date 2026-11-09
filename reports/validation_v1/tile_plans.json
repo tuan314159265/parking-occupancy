@@ -1,0 +1,730 @@
+{
+  "hybrid_p16_o0.2": {
+    "PUCPR_ed651d8e7b980222": {
+      "all_context_covered": true,
+      "all_spaces_covered": true,
+      "bounds": [
+        [
+          26,
+          159,
+          711,
+          586
+        ],
+        [
+          482,
+          159,
+          1167,
+          586
+        ]
+      ],
+      "context_padding_px": 16,
+      "effective_overlap": 0.2,
+      "fallback_reason": null,
+      "grid": [
+        1,
+        2
+      ],
+      "requested_grid": [
+        2,
+        2
+      ],
+      "requested_overlap": 0.2,
+      "roi_bounds_xyxy": [
+        26,
+        159,
+        1167,
+        586
+      ]
+    },
+    "UFPR04_38ea1f973c7f01a2": {
+      "all_context_covered": true,
+      "all_spaces_covered": true,
+      "bounds": [
+        [
+          173,
+          82,
+          668,
+          462
+        ],
+        [
+          503,
+          82,
+          998,
+          462
+        ],
+        [
+          173,
+          334,
+          668,
+          714
+        ],
+        [
+          503,
+          334,
+          998,
+          714
+        ]
+      ],
+      "context_padding_px": 16,
+      "effective_overlap": 0.2,
+      "fallback_reason": null,
+      "grid": [
+        2,
+        2
+      ],
+      "requested_grid": [
+        2,
+        2
+      ],
+      "requested_overlap": 0.2,
+      "roi_bounds_xyxy": [
+        173,
+        82,
+        998,
+        714
+      ]
+    },
+    "UFPR04_d9e74d220b252cea": {
+      "all_context_covered": true,
+      "all_spaces_covered": true,
+      "bounds": [
+        [
+          69,
+          113,
+          580,
+          478
+        ],
+        [
+          407,
+          113,
+          918,
+          478
+        ],
+        [
+          69,
+          355,
+          580,
+          720
+        ],
+        [
+          407,
+          355,
+          918,
+          720
+        ]
+      ],
+      "context_padding_px": 16,
+      "effective_overlap": 0.20141342756183755,
+      "fallback_reason": null,
+      "grid": [
+        2,
+        2
+      ],
+      "requested_grid": [
+        2,
+        2
+      ],
+      "requested_overlap": 0.2,
+      "roi_bounds_xyxy": [
+        69,
+        113,
+        918,
+        720
+      ]
+    },
+    "UFPR05_d428ebf84a8a4208": {
+      "all_context_covered": true,
+      "all_spaces_covered": true,
+      "bounds": [
+        [
+          262,
+          0,
+          871,
+          402
+        ],
+        [
+          667,
+          0,
+          1276,
+          402
+        ],
+        [
+          262,
+          268,
+          871,
+          670
+        ],
+        [
+          667,
+          268,
+          1276,
+          670
+        ]
+      ],
+      "context_padding_px": 16,
+      "effective_overlap": 0.2,
+      "fallback_reason": null,
+      "grid": [
+        2,
+        2
+      ],
+      "requested_grid": [
+        2,
+        2
+      ],
+      "requested_overlap": 0.2,
+      "roi_bounds_xyxy": [
+        262,
+        0,
+        1276,
+        670
+      ]
+    }
+  },
+  "hybrid_p16_o0.4": {
+    "PUCPR_ed651d8e7b980222": {
+      "all_context_covered": true,
+      "all_spaces_covered": true,
+      "bounds": [
+        [
+          26,
+          159,
+          825,
+          586
+        ],
+        [
+          368,
+          159,
+          1167,
+          586
+        ]
+      ],
+      "context_padding_px": 16,
+      "effective_overlap": 0.4,
+      "fallback_reason": null,
+      "grid": [
+        1,
+        2
+      ],
+      "requested_grid": [
+        2,
+        2
+      ],
+      "requested_overlap": 0.4,
+      "roi_bounds_xyxy": [
+        26,
+        159,
+        1167,
+        586
+      ]
+    },
+    "UFPR04_38ea1f973c7f01a2": {
+      "all_context_covered": true,
+      "all_spaces_covered": true,
+      "bounds": [
+        [
+          173,
+          82,
+          751,
+          525
+        ],
+        [
+          420,
+          82,
+          998,
+          525
+        ],
+        [
+          173,
+          271,
+          751,
+          714
+        ],
+        [
+          420,
+          271,
+          998,
+          714
+        ]
+      ],
+      "context_padding_px": 16,
+      "effective_overlap": 0.4,
+      "fallback_reason": null,
+      "grid": [
+        2,
+        2
+      ],
+      "requested_grid": [
+        2,
+        2
+      ],
+      "requested_overlap": 0.4,
+      "roi_bounds_xyxy": [
+        173,
+        82,
+        998,
+        714
+      ]
+    },
+    "UFPR04_d9e74d220b252cea": {
+      "all_context_covered": true,
+      "all_spaces_covered": true,
+      "bounds": [
+        [
+          69,
+          113,
+          664,
+          538
+        ],
+        [
+          323,
+          113,
+          918,
+          538
+        ],
+        [
+          69,
+          295,
+          664,
+          720
+        ],
+        [
+          323,
+          295,
+          918,
+          720
+        ]
+      ],
+      "context_padding_px": 16,
+      "effective_overlap": 0.4,
+      "fallback_reason": null,
+      "grid": [
+        2,
+        2
+      ],
+      "requested_grid": [
+        2,
+        2
+      ],
+      "requested_overlap": 0.4,
+      "roi_bounds_xyxy": [
+        69,
+        113,
+        918,
+        720
+      ]
+    },
+    "UFPR05_d428ebf84a8a4208": {
+      "all_context_covered": true,
+      "all_spaces_covered": true,
+      "bounds": [
+        [
+          262,
+          0,
+          972,
+          469
+        ],
+        [
+          566,
+          0,
+          1276,
+          469
+        ],
+        [
+          262,
+          201,
+          972,
+          670
+        ],
+        [
+          566,
+          201,
+          1276,
+          670
+        ]
+      ],
+      "context_padding_px": 16,
+      "effective_overlap": 0.4,
+      "fallback_reason": null,
+      "grid": [
+        2,
+        2
+      ],
+      "requested_grid": [
+        2,
+        2
+      ],
+      "requested_overlap": 0.4,
+      "roi_bounds_xyxy": [
+        262,
+        0,
+        1276,
+        670
+      ]
+    }
+  },
+  "hybrid_p32_o0.2": {
+    "PUCPR_ed651d8e7b980222": {
+      "all_context_covered": true,
+      "all_spaces_covered": true,
+      "bounds": [
+        [
+          10,
+          143,
+          714,
+          602
+        ],
+        [
+          479,
+          143,
+          1183,
+          602
+        ]
+      ],
+      "context_padding_px": 32,
+      "effective_overlap": 0.2,
+      "fallback_reason": null,
+      "grid": [
+        1,
+        2
+      ],
+      "requested_grid": [
+        2,
+        2
+      ],
+      "requested_overlap": 0.2,
+      "roi_bounds_xyxy": [
+        10,
+        143,
+        1183,
+        602
+      ]
+    },
+    "UFPR04_38ea1f973c7f01a2": {
+      "all_context_covered": true,
+      "all_spaces_covered": true,
+      "bounds": [
+        [
+          157,
+          66,
+          680,
+          466
+        ],
+        [
+          491,
+          66,
+          1014,
+          466
+        ],
+        [
+          157,
+          320,
+          680,
+          720
+        ],
+        [
+          491,
+          320,
+          1014,
+          720
+        ]
+      ],
+      "context_padding_px": 32,
+      "effective_overlap": 0.22053675612602097,
+      "fallback_reason": null,
+      "grid": [
+        2,
+        2
+      ],
+      "requested_grid": [
+        2,
+        2
+      ],
+      "requested_overlap": 0.2,
+      "roi_bounds_xyxy": [
+        157,
+        66,
+        1014,
+        720
+      ]
+    },
+    "UFPR04_d9e74d220b252cea": {
+      "all_context_covered": true,
+      "all_spaces_covered": true,
+      "bounds": [
+        [
+          53,
+          97,
+          598,
+          482
+        ],
+        [
+          389,
+          97,
+          934,
+          482
+        ],
+        [
+          53,
+          335,
+          598,
+          720
+        ],
+        [
+          389,
+          335,
+          934,
+          720
+        ]
+      ],
+      "context_padding_px": 32,
+      "effective_overlap": 0.2359550561797752,
+      "fallback_reason": null,
+      "grid": [
+        2,
+        2
+      ],
+      "requested_grid": [
+        2,
+        2
+      ],
+      "requested_overlap": 0.2,
+      "roi_bounds_xyxy": [
+        53,
+        97,
+        934,
+        720
+      ]
+    },
+    "UFPR05_d428ebf84a8a4208": {
+      "all_context_covered": true,
+      "all_spaces_covered": true,
+      "bounds": [
+        [
+          246,
+          0,
+          871,
+          415
+        ],
+        [
+          655,
+          0,
+          1280,
+          415
+        ],
+        [
+          246,
+          271,
+          871,
+          686
+        ],
+        [
+          655,
+          271,
+          1280,
+          686
+        ]
+      ],
+      "context_padding_px": 32,
+      "effective_overlap": 0.20699708454810506,
+      "fallback_reason": null,
+      "grid": [
+        2,
+        2
+      ],
+      "requested_grid": [
+        2,
+        2
+      ],
+      "requested_overlap": 0.2,
+      "roi_bounds_xyxy": [
+        246,
+        0,
+        1280,
+        686
+      ]
+    }
+  },
+  "hybrid_p32_o0.4": {
+    "PUCPR_ed651d8e7b980222": {
+      "all_context_covered": true,
+      "all_spaces_covered": true,
+      "bounds": [
+        [
+          10,
+          143,
+          832,
+          602
+        ],
+        [
+          361,
+          143,
+          1183,
+          602
+        ]
+      ],
+      "context_padding_px": 32,
+      "effective_overlap": 0.4,
+      "fallback_reason": null,
+      "grid": [
+        1,
+        2
+      ],
+      "requested_grid": [
+        2,
+        2
+      ],
+      "requested_overlap": 0.4,
+      "roi_bounds_xyxy": [
+        10,
+        143,
+        1183,
+        602
+      ]
+    },
+    "UFPR04_38ea1f973c7f01a2": {
+      "all_context_covered": true,
+      "all_spaces_covered": true,
+      "bounds": [
+        [
+          157,
+          66,
+          757,
+          524
+        ],
+        [
+          414,
+          66,
+          1014,
+          524
+        ],
+        [
+          157,
+          262,
+          757,
+          720
+        ],
+        [
+          414,
+          262,
+          1014,
+          720
+        ]
+      ],
+      "context_padding_px": 32,
+      "effective_overlap": 0.4,
+      "fallback_reason": null,
+      "grid": [
+        2,
+        2
+      ],
+      "requested_grid": [
+        2,
+        2
+      ],
+      "requested_overlap": 0.4,
+      "roi_bounds_xyxy": [
+        157,
+        66,
+        1014,
+        720
+      ]
+    },
+    "UFPR04_d9e74d220b252cea": {
+      "all_context_covered": true,
+      "all_spaces_covered": true,
+      "bounds": [
+        [
+          53,
+          97,
+          670,
+          534
+        ],
+        [
+          317,
+          97,
+          934,
+          534
+        ],
+        [
+          53,
+          283,
+          670,
+          720
+        ],
+        [
+          317,
+          283,
+          934,
+          720
+        ]
+      ],
+      "context_padding_px": 32,
+      "effective_overlap": 0.4,
+      "fallback_reason": null,
+      "grid": [
+        2,
+        2
+      ],
+      "requested_grid": [
+        2,
+        2
+      ],
+      "requested_overlap": 0.4,
+      "roi_bounds_xyxy": [
+        53,
+        97,
+        934,
+        720
+      ]
+    },
+    "UFPR05_d428ebf84a8a4208": {
+      "all_context_covered": true,
+      "all_spaces_covered": true,
+      "bounds": [
+        [
+          246,
+          0,
+          970,
+          481
+        ],
+        [
+          556,
+          0,
+          1280,
+          481
+        ],
+        [
+          246,
+          205,
+          970,
+          686
+        ],
+        [
+          556,
+          205,
+          1280,
+          686
+        ]
+      ],
+      "context_padding_px": 32,
+      "effective_overlap": 0.4,
+      "fallback_reason": null,
+      "grid": [
+        2,
+        2
+      ],
+      "requested_grid": [
+        2,
+        2
+      ],
+      "requested_overlap": 0.4,
+      "roi_bounds_xyxy": [
+        246,
+        0,
+        1280,
+        686
+      ]
+    }
+  }
+}

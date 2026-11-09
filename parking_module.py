@@ -1016,7 +1016,7 @@ DEFAULT_OCCUPANCY_CONFIG = dict(
 )
 
 
-def infer_parking_occupancy(sample_id, detections, layout, config=None):
+def infer_parking_occupancy(sample_id, detections, layout, config=None, *, _scored_pairs=None, _kept_indices=None):
     """Apply identical geometric matching rules to either detector's output.
 
     Class-agnostic NMS precedes matching. Each vehicle proposes its best space;
@@ -1040,7 +1040,7 @@ def infer_parking_occupancy(sample_id, detections, layout, config=None):
     if any(cfg[key] == 0 for key in ("lower_fraction", "min_overlap", "min_score")):
         raise ValueError("lower_fraction, min_overlap and min_score must be positive")
     detections = list(detections)
-    rows = score_vehicle_spaces(detections, layout, cfg["lower_fraction"])
+    rows = score_vehicle_spaces(detections, layout, cfg["lower_fraction"]) if _scored_pairs is None else _scored_pairs
 
     def iou(first, second):
         a, b = first.xyxy, second.xyxy
@@ -1052,10 +1052,11 @@ def infer_parking_occupancy(sample_id, detections, layout, config=None):
     # Coordinate/class tie-breaks make the decision independent of input order.
     order = sorted(range(len(detections)), key=lambda i: (
         -detections[i].confidence, tuple(detections[i].xyxy), detections[i].class_name))
-    kept = []
-    for index in order:
-        if not any(iou(detections[index], detections[j]) > cfg["nms_iou"] for j in kept):
-            kept.append(index)
+    kept = [] if _kept_indices is None else list(_kept_indices)
+    if _kept_indices is None:
+        for index in order:
+            if not any(iou(detections[index], detections[j]) > cfg["nms_iou"] for j in kept):
+                kept.append(index)
     by_detection = {index: [] for index in kept}
     evidence = {str(s["space_id"]): 0. for s in layout["spaces"]}
     uncertain = set()
@@ -1599,6 +1600,540 @@ def apply_geometry_policy(predictions, quality, policy="unknown"):
     return {"predictions": output, "changed_space_ids": changed, "policy": policy}
 
 
+# Bounded validation; optional ML dependencies are imported only when running it.
+def _validation_hash(value):
+    return hashlib.sha256(json.dumps(value,sort_keys=True,separators=(",",":"),allow_nan=False).encode()).hexdigest()
+
+
+def _validation_sha(path):
+    h=hashlib.sha256()
+    with Path(path).open('rb') as stream:
+        for block in iter(lambda:stream.read(8*1024*1024),b''):
+            h.update(block)
+    return h.hexdigest()
+
+
+def _validation_write(path, value):
+    path=Path(path)
+    path.parent.mkdir(parents=True,exist_ok=True)
+    temp=path.with_suffix(path.suffix+'.tmp')
+    temp.write_text(json.dumps(value,sort_keys=True,ensure_ascii=False,allow_nan=False,indent=2)+'\n')
+    temp.replace(path)
+
+
+def validation_pixel_shape(tile_count, base_size):
+    """Exactly match 1/2/4 square tile tensors; never infer budget from image area."""
+    if tile_count not in (1,2,4) or base_size <= 0 or base_size%32:
+        raise ValueError('Expected 1/2/4 tiles and a positive stride-32 base size')
+    return {1:[base_size,base_size],2:[base_size,2*base_size],4:[2*base_size,2*base_size]}[tile_count]
+
+
+def _validation_feature(gray, polygon, cfg):
+    import numpy as np
+    from skimage.feature import hog
+    points=np.asarray(polygon)
+    lo=np.floor(points.min(axis=0)).astype(int)
+    hi=np.ceil(points.max(axis=0)).astype(int)
+    x0,y0=max(0,lo[0]),max(0,lo[1])
+    x1,y1=min(gray.shape[1],hi[0]),min(gray.shape[0],hi[1])
+    if x1<=x0 or y1<=y0:
+        raise ValueError('Empty HOG crop')
+    patch=Image.fromarray(gray[y0:y1,x0:x1]).resize(tuple(cfg['win_size']),Image.Resampling.BILINEAR)
+    cell_w,cell_h=cfg['cell_size']; block_w,block_h=cfg['block_size']
+    return hog(np.asarray(patch),orientations=cfg['nbins'],pixels_per_cell=(cell_h,cell_w),
+               cells_per_block=(block_h//cell_h,block_w//cell_w),block_norm='L2-Hys',
+               transform_sqrt=False,feature_vector=True,channel_axis=None).astype('float32')
+
+
+class _ValidationYOLO:
+    def __init__(self,checkpoint,config,device):
+        from ultralytics import YOLO
+        self.model=YOLO(str(checkpoint))
+        self.config=config
+        self.device=int(device) if str(device).isdigit() else device
+        self.class_ids=[i for i,name in self.model.names.items() if name in config['classes']]
+        if {self.model.names[i] for i in self.class_ids}!=set(config['classes']):
+            raise ValueError('Checkpoint lacks required vehicle classes')
+        self._pixels=[]; self._warmed=set()
+        self.model.model.register_forward_pre_hook(self._observe_input)
+
+    def _observe_input(self,module,args):
+        tensor=args[0]
+        self._pixels.append(int(tensor.shape[0]*tensor.shape[-2]*tensor.shape[-1]))
+
+    def sync(self):
+        import torch
+        if self.device!='cpu':
+            torch.cuda.synchronize(self.device)
+
+    def predict(self,image,shape):
+        self._pixels=[]
+        result=self.model.predict(image,imgsz=list(shape),rect=False,conf=self.config['confidence_floor'],
+            iou=self.config['iou'],max_det=self.config['max_det'],classes=self.class_ids,device=self.device,
+            augment=False,agnostic_nms=False,verbose=False,save=False)[0]
+        self.sync()
+        if sum(self._pixels)!=shape[0]*shape[1]:
+            raise RuntimeError(f'Unexpected model tensor pixel budget: {self._pixels} vs {shape}')
+        boxes=[]
+        if result.boxes is not None:
+            for xyxy,score,cls in zip(result.boxes.xyxy.cpu().tolist(),result.boxes.conf.cpu().tolist(),result.boxes.cls.cpu().tolist()):
+                if xyxy[2]>xyxy[0] and xyxy[3]>xyxy[1]:
+                    boxes.append(VehicleDetection(tuple(map(float,xyxy)),float(score),self.model.names[int(cls)]))
+        return boxes,sum(self._pixels)
+
+    def warmup(self,shape):
+        import numpy as np
+        key=tuple(shape)
+        if key not in self._warmed:
+            self.predict(np.zeros((*shape,3),dtype=np.uint8),shape)
+            self._warmed.add(key)
+
+
+def _validation_nms(candidates, threshold):
+    """Same edge-first, class-agnostic NMS as the existing hybrid cell."""
+    order=sorted(range(len(candidates)),key=lambda i:(candidates[i]['edge'],-candidates[i]['detection'].confidence))
+    kept=[]
+    def iou(a,b):
+        a,b=a.xyxy,b.xyxy
+        area=max(0,min(a[2],b[2])-max(a[0],b[0]))*max(0,min(a[3],b[3])-max(a[1],b[1]))
+        return area/((a[2]-a[0])*(a[3]-a[1])+(b[2]-b[0])*(b[3]-b[1])-area)
+    for i in order:
+        if not any(iou(candidates[i]['detection'],candidates[j]['detection'])>threshold for j in kept):
+            kept.append(i)
+    return [candidates[i]['detection'] for i in kept]
+
+
+def _validation_detect(image,layout,detector,variant,plan,tiles=None):
+    base=plan['detector']['base_imgsz']
+    if variant['kind']=='full':
+        shape=variant['shapes'].get(variant.get('geometry_id'),[base,base]) if 'shapes' in variant else [base,base]
+        detector.warmup(shape)
+        detections,pixels=detector.predict(image,shape)
+        return detections,dict(inference_calls=1,input_pixels=pixels)
+    tiles=make_parking_tiles(image,layout,**variant['tiling']) if tiles is None else tiles
+    detector.warmup([base,base])
+    candidates=[]; pixels=0
+    for tile in tiles['tiles']:
+        boxes,n=detector.predict(tile['image'],[base,base]); pixels+=n
+        meta=tile['metadata'];left,top,right,bottom=meta['bounds_xyxy']
+        for box in boxes:
+            xyxy=tuple(map(float,tile_boxes_to_image(box.xyxy,meta,clip=True)))
+            if min(xyxy[2]-xyxy[0],xyxy[3]-xyxy[1])<plan['hybrid']['min_box_size_px']:
+                continue
+            margin=plan['hybrid']['edge_margin_px']
+            edge=((left>0 and xyxy[0]<=left+margin) or (top>0 and xyxy[1]<=top+margin)
+                  or (right<layout['width'] and xyxy[2]>=right-margin)
+                  or (bottom<layout['height'] and xyxy[3]>=bottom-margin))
+            candidates.append(dict(detection=VehicleDetection(xyxy,box.confidence,box.class_name),edge=bool(edge)))
+    detections=_validation_nms(candidates,plan['hybrid']['global_nms_iou'])
+    return detections,dict(inference_calls=len(tiles['tiles']),input_pixels=pixels,
+        requested_overlap=tiles['requested_overlap'],effective_overlap=tiles['effective_overlap'],
+        fallback_reason=tiles['fallback_reason'],grid=tiles['grid'])
+
+
+def validation_engine_sha256():
+    prepare_validation_runtime()  # Lazy observer setup; data-only imports stay lightweight.
+    import inspect
+    names=('_validation_feature','_ValidationYOLO','_validation_nms','_validation_detect','validation_pixel_shape',
+           'score_vehicle_spaces','infer_parking_occupancy','make_parking_tiles','tile_boxes_to_image',
+           'analyze_parking_geometry','build_geometry_reference','assess_geometry_quality','apply_geometry_policy',
+           'evaluate_occupancy','run_validation_search','_validation_benchmark','FrameTimer',
+           '_validation_hog_predictions','_validation_matching_reports','_transform_tile_points',
+           '_geometry_angle_difference','_geometry_quality_config','_gradient_magnitude',
+           '_prediction_record','_classification_summary','_timing_summary','_evaluation_group')
+    return _validation_hash({name:inspect.getsource(globals()[name]) for name in names})
+
+
+def _validation_read_image(record,root):
+    import cv2
+    image=cv2.imread(str(Path(root)/record['image_path']),cv2.IMREAD_COLOR)
+    if image is None or image.shape[:2]!=(record['height'],record['width']):
+        raise ValueError(f'Cannot read original-size image: {record["sample_id"]}')
+    return image
+
+
+def _validation_hog_matrix(records,root,cfg,directory,name,key):
+    import numpy as np
+    directory=Path(directory);directory.mkdir(parents=True,exist_ok=True)
+    path=directory/f'{name}_features.npy';meta=directory/f'{name}_features.json'
+    labels=np.asarray([label for row in records for label in row['labels'].values()],dtype=np.int32)
+    width,height=cfg['win_size']
+    dim=len(_validation_feature(np.zeros((height,width),dtype=np.uint8),[[0,0],[width,0],[width,height]],cfg))
+    if meta.is_file() and json.loads(meta.read_text()).get('key')==key:
+        matrix=np.load(path,mmap_mode='r')
+        if matrix.shape==(len(labels),dim):
+            print(f'HOG {name}: reuse features {matrix.shape}',flush=True)
+            return matrix,labels
+    matrix=np.lib.format.open_memmap(path,mode='w+',dtype='float64',shape=(len(labels),dim))
+    cursor=0
+    for i,record in enumerate(records):
+        with Image.open(Path(root)/record['image_path']) as image:
+            gray=np.asarray(image.convert('L'))
+        frame=read_project_frame(record,root)
+        by_space={space.space_id:space.polygon for space in frame.spaces}
+        for sid in record['labels']:
+            matrix[cursor]=_validation_feature(gray,by_space[sid],cfg);cursor+=1
+        if i%50==0 or i+1==len(records):
+            print(f'HOG {name}: {i+1}/{len(records)} images, {cursor}/{len(labels)} slots',flush=True)
+    matrix.flush()
+    _validation_write(meta,dict(key=key,shape=list(matrix.shape)))
+    return matrix,labels
+
+
+def _validation_hog_predictions(records,margins,threshold,qualities,policy):
+    predictions=[];cursor=0
+    for row in records:
+        raw=[]
+        for sid in row['labels']:
+            raw.append(dict(sample_id=row['sample_id'],space_id=sid,decision_margin=float(margins[cursor]),
+                            state='occupied' if margins[cursor]>threshold else 'vacant'))
+            cursor+=1
+        predictions.extend(apply_geometry_policy(raw,qualities[row['sample_id']],policy)['predictions'])
+    if cursor!=len(margins):
+        raise ValueError('SVM margins do not cover the manifest')
+    return predictions
+
+
+def _validation_matching_reports(records,raw,layouts,qualities,candidates,conf,policy):
+    # Cache geometric pair scores only within one frame; bounded memory.
+    predictions=[[] for _ in candidates]
+    for row in records:
+        sid=row['sample_id'];layout=layouts[row['geometry_id']]
+        boxes=[VehicleDetection(tuple(d['xyxy']),d['confidence'],d['class_name'])
+               for d in raw[sid]['detections'] if d['confidence']>=conf]
+        scores={fraction:[r for r in score_vehicle_spaces(boxes,layout,fraction) if r['overlap']>0]
+                for fraction in sorted({c['lower_fraction'] for c in candidates})}
+        kept=None
+        for i,cfg in enumerate(candidates):
+            result=infer_parking_occupancy(sid,boxes,layout,cfg,_scored_pairs=scores[cfg['lower_fraction']],_kept_indices=kept)
+            kept=result['kept_detection_indices']
+            predictions[i].extend(apply_geometry_policy(result['predictions'],qualities[sid],policy)['predictions'])
+    reports=[]
+    for candidate,rows in zip(candidates,predictions):
+        report=evaluate_occupancy(records,rows,missing_policy='error',metadata=dict(split='val',occupancy_config=candidate))
+        reports.append(report['overall'])
+    return reports
+
+
+def _validation_benchmark(records,root,layouts,refs,model,variant,plan,matching,confidence,hog_bundle):
+    import numpy as np
+    predictions=[];timings=[];budgets=[]
+    if variant['kind']!='hog':
+        shapes=variant.get('shapes',{})
+        for shape in {tuple(s) for s in shapes.values()}|{(plan['detector']['base_imgsz'],)*2}:
+            model.warmup(shape)
+    for i,row in enumerate(records):
+        layout=layouts[row['geometry_id']];sid=row['sample_id'];tile_result=None
+        sync=None if variant['kind']=='hog' else model.sync
+        with FrameTimer(sid,synchronize=sync) as timer:
+            with timer.stage('preprocess'):
+                image=_validation_read_image(row,root)
+                geometry=analyze_parking_geometry(image,layout,plan['geometry'])
+                quality=assess_geometry_quality(geometry,refs.get(row['geometry_id']),plan['geometry_quality'])
+                if variant['kind']=='hybrid':
+                    tile_result=make_parking_tiles(image,layout,**variant['tiling'])
+                if variant['kind']=='hog':
+                    with Image.open(Path(root)/row['image_path']) as source:
+                        gray=np.asarray(source.convert('L'))
+            with timer.stage('model'):
+                if variant['kind']=='hog':
+                    features=np.stack([_validation_feature(gray,s['polygon'],plan['hog']['config']) for s in layout['spaces']])
+                    margins=hog_bundle['model'].decision_function(features)
+                    raw=[dict(sample_id=sid,space_id=str(s['space_id']),decision_margin=float(m),
+                              state='occupied' if m>hog_bundle['decision_threshold'] else 'vacant')
+                         for s,m in zip(layout['spaces'],margins)]
+                    budget=dict(inference_calls=1,input_pixels=0)
+                else:
+                    frame_variant=dict(variant,geometry_id=row['geometry_id'])
+                    boxes,budget=_validation_detect(image,layout,model,frame_variant,plan,tile_result)
+            with timer.stage('postprocess'):
+                if variant['kind']!='hog':
+                    boxes=[box for box in boxes if box.confidence>=confidence]
+                    raw=infer_parking_occupancy(sid,boxes,layout,matching)['predictions']
+                predictions.extend(apply_geometry_policy(raw,quality,plan['geometry_policy'])['predictions'])
+        timing=timer.record(inference_calls=budget['inference_calls'])
+        timings.append(dict(timing,input_pixels=budget['input_pixels']))
+        budgets.append(dict(sample_id=sid,**budget))
+        if i%50==0 or i+1==len(records):
+            print(f'Benchmark {variant["id"]}: {i+1}/{len(records)} validation images',flush=True)
+    report=evaluate_occupancy(records,predictions,timings,missing_policy='error',method=variant['id'],
+                             metadata=dict(split='val',timing_scope='complete original-image pipeline',geometry_policy=plan['geometry_policy']))
+    return report,budgets
+
+
+def verify_validation_lock(lock_path,manifest_dir,checkpoint,model_path=None,require_complete=True):
+    """Reject changed checkpoints/splits/code/models before any final-test inference."""
+    lock=json.loads(Path(lock_path).read_text())
+    if lock.get('selected_on')!='val' or (require_complete and not lock.get('complete')):
+        raise ValueError('Only a complete validation run can authorize final testing')
+    for name,digest in lock['manifest_sha256'].items():
+        if _validation_sha(Path(manifest_dir)/name)!=digest:
+            raise ValueError(f'Locked split artifact changed: {name}')
+    if _validation_sha(checkpoint)!=lock['checkpoint_sha256']:
+        raise ValueError('Checkpoint differs from validation lock')
+    if validation_engine_sha256()!=lock['engine_sha256']:
+        raise ValueError('Inference/evaluation code differs from validation lock')
+    if lock.get('environment'):
+        import cv2,numpy as np,torch,ultralytics,skimage,sklearn
+        versions=dict(opencv=cv2.__version__,numpy=np.__version__,torch=torch.__version__,
+                      ultralytics=ultralytics.__version__,skimage=skimage.__version__,sklearn=sklearn.__version__)
+        changed={k:(lock['environment'][k],v) for k,v in versions.items()
+                 if lock['environment'][k].split('+')[0]!=v.split('+')[0]}
+        if changed:
+            raise ValueError(f'Install the locked validation library versions before test: {changed}')
+    model_path=Path(model_path) if model_path else Path(lock_path).parent/'hog_svm.joblib'
+    if _validation_sha(model_path)!=lock['hog_model_sha256']:
+        raise ValueError('HOG/SVM model differs from validation lock')
+    if _validation_sha(Path(lock_path).parent/'geometry_references.joblib')!=lock['geometry_reference_sha256']:
+        raise ValueError('Train-only geometry references differ from validation lock')
+    return lock
+
+
+def run_validation_search(dataset_root,manifest_dir,output,plan,checkpoint,device='cpu',max_val_frames=None,max_train_frames=None):
+    """Task 12: bounded real validation only, journaled search and immutable lock.
+
+    Partial runs are smoke tests and NEVER create locked_config.json. Models
+    never receive test images/labels. Full resolution control matches actual
+    square tile tensor pixels per frame, with rect=False for all detector arms.
+    """
+    import gc,inspect,itertools,platform,subprocess,warnings
+    import cv2,joblib,numpy as np,skimage,sklearn,torch,ultralytics
+    from sklearn.svm import LinearSVC
+    from sklearn.exceptions import ConvergenceWarning
+    from threadpoolctl import threadpool_limits
+    if isinstance(plan,(str,Path)):
+        plan=json.loads(Path(plan).read_text())
+    root,md,out=Path(dataset_root),Path(manifest_dir),Path(output)
+    for limit in (max_val_frames,max_train_frames):
+        if limit is not None and (type(limit) is not int or limit<=0):
+            raise ValueError('Partial-run limits must be positive integers')
+    if device=='auto':
+        device='0' if torch.cuda.is_available() else 'cpu'
+    if md.name!=plan['protocol'] or md.parent.name!=plan['dataset_version']:
+        raise ValueError('Manifest directory does not match the planned dataset/protocol')
+    if ultralytics.__version__!=plan['ultralytics_version']:
+        raise ValueError(f'Install ultralytics=={plan["ultralytics_version"]} before this experiment')
+    if _validation_sha(checkpoint)!=plan['checkpoint']['sha256']:
+        raise ValueError('Checkpoint SHA256 does not match the preregistered plan')
+    if plan['detector']['rect'] is not False:
+        raise ValueError('Pixel-matched experiment requires rect=False')
+    engine=validation_engine_sha256()
+    # Only train/val JSON is decoded. Test bytes are fingerprinted but never inferred/scored.
+    manifests={name:_validation_sha(md/name) for name in ('train.jsonl','val.jsonl','test.jsonl')}
+    train=_read_jsonl(md/'train.jsonl');val=_read_jsonl(md/'val.jsonl')
+    if {r['sample_id'] for r in train}&{r['sample_id'] for r in val} or {r['date'] for r in train}&{r['date'] for r in val}:
+        raise ValueError('Train/validation leakage')
+    catalog=md.parent/'slot_geometries.json'
+    layouts=json.loads(catalog.read_text())['layouts'];manifests['../slot_geometries.json']=_validation_sha(catalog)
+    split_lock=json.loads((md.parent/'split_lock.json').read_text())
+    for name,digest in manifests.items():
+        expected=split_lock['artifacts_sha256'][f'{plan["protocol"]}/{name}' if not name.startswith('../') else name[3:]]
+        if digest!=expected:
+            raise ValueError(f'Manifest differs from frozen project split: {name}')
+    manifests['../split_lock.json']=_validation_sha(md.parent/'split_lock.json')
+    full_counts=dict(train=len(train),val=len(val))
+    if max_train_frames:
+        train=train[:max_train_frames]
+    if max_val_frames:
+        val=val[:max_val_frames]
+    complete=(len(train)==full_counts['train'] and len(val)==full_counts['val'])
+    environment=dict(python=platform.python_version(),torch=torch.__version__,ultralytics=ultralytics.__version__,
+        opencv=cv2.__version__,numpy=np.__version__,skimage=skimage.__version__,sklearn=sklearn.__version__,device=str(device))
+    run_key=_validation_hash(dict(plan=plan,manifests=manifests,engine=engine,environment=environment,
+                                 train=[r['sample_id'] for r in train],val=[r['sample_id'] for r in val]))
+    frozen=dict(run_key=run_key,plan=plan,manifests=manifests,engine_sha256=engine,environment=environment,
+                complete=complete,counts=dict(train=len(train),val=len(val)),test_inference_performed=False)
+    out.mkdir(parents=True,exist_ok=True)
+    if (out/'preregistered_plan.json').exists() and json.loads((out/'preregistered_plan.json').read_text())!=frozen:
+        raise ValueError('Run directory is locked to a different plan/code/environment; choose a new directory')
+    _validation_write(out/'preregistered_plan.json',frozen)
+    if (out/'locked_config.json').exists():
+        verify_validation_lock(out/'locked_config.json',md,checkpoint)
+        print('Validation already complete; reuse locked results',flush=True)
+        return json.loads((out/'validation_summary.json').read_text())
+    torch.set_num_threads(plan['cpu_threads']);cv2.setNumThreads(1)
+    torch.manual_seed(plan['seed']);np.random.seed(plan['seed'])
+    torch.use_deterministic_algorithms(True,warn_only=True)
+    # Train-only geometric references, persisted for reproducible test execution.
+    ref_path=out/'geometry_references.joblib'
+    if ref_path.exists():
+        refs=joblib.load(ref_path)
+    else:
+        refs={}
+        for gid in sorted({r['geometry_id'] for r in train}):
+            rows=sorted([r for r in train if r['geometry_id']==gid],key=lambda r:r['sample_id'])
+            chosen=[rows[int(i)] for i in np.linspace(0,len(rows)-1,min(len(rows),plan['reference_frames'])).round()]
+            refs[gid]=build_geometry_reference((_validation_read_image(r,root) for r in chosen),layouts[gid],plan['geometry'],plan['geometry_quality'])
+            print('Train geometry reference:',gid,len(chosen),flush=True)
+        joblib.dump(refs,ref_path)
+    qpath=out/'validation_geometry.json'
+    if qpath.exists():
+        qualities=json.loads(qpath.read_text())
+    else:
+        qualities={}
+        for i,row in enumerate(val):
+            read_project_frame(row,root)
+            geometry=analyze_parking_geometry(_validation_read_image(row,root),layouts[row['geometry_id']],plan['geometry'])
+            qualities[row['sample_id']]=assess_geometry_quality(geometry,refs.get(row['geometry_id']),plan['geometry_quality'])
+            if i%50==0 or i+1==len(val):
+                print(f'Validation geometry: {i+1}/{len(val)}',flush=True)
+        _validation_write(qpath,qualities)
+    # HOG/SVM search. Margins are never passed to the probability-score schema.
+    hpath=out/'hog_svm.joblib';hog_search_path=out/'hog_search.json'
+    if hpath.exists() and hog_search_path.exists():
+        hog_bundle=joblib.load(hpath);hog_search=json.loads(hog_search_path.read_text())
+    else:
+        cfg=plan['hog']['config']
+        xtrain,ytrain=_validation_hog_matrix(train,root,cfg,out/'features','train',run_key)
+        xval,yval=_validation_hog_matrix(val,root,cfg,out/'features','val',run_key)
+        hog_search=[];best=None
+        for c in plan['hog']['C']:
+            candidate_path=out/'hog_candidates'/f'C_{c}.joblib'
+            candidate_path.parent.mkdir(exist_ok=True)
+            if candidate_path.exists():
+                candidate=joblib.load(candidate_path)
+            else:
+                print('Fit LinearSVC:',c,flush=True)
+                candidate=LinearSVC(C=c,dual=False,max_iter=plan['hog']['max_iter'],random_state=plan['seed'])
+                with threadpool_limits(limits=plan['cpu_threads']),warnings.catch_warnings():
+                    warnings.simplefilter('error',ConvergenceWarning)
+                    candidate.fit(xtrain,ytrain)
+                joblib.dump(candidate,candidate_path)
+            margins=candidate.decision_function(xval)
+            for threshold in plan['hog']['thresholds']:
+                preds=_validation_hog_predictions(val,margins,threshold,qualities,plan['geometry_policy'])
+                metrics=evaluate_occupancy(val,preds,missing_policy='error')['overall']
+                item=dict(C=c,threshold=threshold,metrics=metrics)
+                hog_search.append(item)
+                rank=(metrics['f1'],metrics['coverage'],-metrics['mae_vacant_count'],-c,-abs(threshold))
+                if best is None or rank>best[0]:
+                    best=(rank,candidate,c,threshold)
+                print(f'HOG C={c} threshold={threshold}: F1={metrics["f1"]:.4f}',flush=True)
+        hog_bundle=dict(model=best[1],selected_C=best[2],decision_threshold=best[3],hog_config=cfg,hog_backend='skimage',
+                        score_type='svm_decision_margin',dataset_version=plan['dataset_version'],protocol=plan['protocol'])
+        joblib.dump(hog_bundle,hpath);_validation_write(hog_search_path,hog_search)
+        del xtrain,xval;gc.collect()
+    # Predeclare every tile request and its real matched full-frame tensor shape.
+    hybrids=[]
+    for padding,overlap in itertools.product(plan['hybrid']['padding'],plan['hybrid']['overlap']):
+        tiling=dict(padding=padding,overlap=overlap,grid=plan['hybrid']['grid'],max_overlap=plan['hybrid']['max_overlap'],
+                    min_tile_size=plan['hybrid']['min_tile_size'],output_size=None)
+        hybrids.append(dict(id=f'hybrid_p{padding}_o{overlap}',kind='hybrid',tiling=tiling))
+    full_base=dict(id='yolo_fullframe',kind='full')
+    controls={};tile_plans={}
+    for hybrid in hybrids:
+        shapes={};tile_plans[hybrid['id']]={}
+        for gid in sorted({r['geometry_id'] for r in val}):
+            layout=layouts[gid]
+            result=make_parking_tiles(np.zeros((layout['height'],layout['width'],3),dtype=np.uint8),layout,**hybrid['tiling'])
+            shapes[gid]=validation_pixel_shape(len(result['tiles']),plan['detector']['base_imgsz'])
+            tile_plans[hybrid['id']][gid]={k:v for k,v in result.items() if k not in ('tiles','coverage')}
+            tile_plans[hybrid['id']][gid]['bounds']=[t['metadata']['bounds_xyxy'] for t in result['tiles']]
+        controls[hybrid['id']]=dict(id='yolo_highres_'+hybrid['id'],kind='full',shapes=shapes)
+    _validation_write(out/'tile_plans.json',tile_plans)
+    candidates=[dict(DEFAULT_OCCUPANCY_CONFIG,lower_fraction=f,min_overlap=o,ambiguity_margin=a,
+                     min_score=plan['matching']['min_score'],nms_iou=plan['matching']['nms_iou'])
+                for f,o,a in itertools.product(plan['matching']['lower_fraction'],plan['matching']['min_overlap'],plan['matching']['ambiguity_margin'])]
+    model=_ValidationYOLO(checkpoint,plan['detector'],device)
+    metrics_cache={};raw_by_variant={};joint=[]
+    def get_raw(variant):
+        signature=_validation_hash(variant)
+        if signature in raw_by_variant:
+            return raw_by_variant[signature]
+        raw={}
+        for i,row in enumerate(val):
+            cache_key=_validation_hash(dict(kind=variant['kind'],tiling=variant.get('tiling'),shape=variant.get('shapes',{}).get(row['geometry_id']),
+                                             sample_id=row['sample_id']))
+            path=out/'detections'/f'{cache_key}.json'
+            if path.exists():
+                item=json.loads(path.read_text())
+            else:
+                boxes,budget=_validation_detect(_validation_read_image(row,root),layouts[row['geometry_id']],model,
+                                                dict(variant,geometry_id=row['geometry_id']),plan)
+                item=dict(sample_id=row['sample_id'],detections=[asdict(box) for box in boxes],budget=budget)
+                _validation_write(path,item)
+            raw[row['sample_id']]=item
+            if i%50==0 or i+1==len(val):
+                print(f'Infer/cache {variant["id"]}: {i+1}/{len(val)}',flush=True)
+        raw_by_variant[signature]=raw
+        return raw
+    def get_metrics(variant,confidence):
+        # High-res controls with identical shape maps reuse detections and evaluation.
+        signature=_validation_hash({k:v for k,v in variant.items() if k!='id'})
+        key=(signature,confidence)
+        if key not in metrics_cache:
+            print('Score matching grid:',variant['id'],confidence,flush=True)
+            metrics_cache[key]=_validation_matching_reports(val,get_raw(variant),layouts,qualities,candidates,confidence,plan['geometry_policy'])
+        return metrics_cache[key]
+    for hybrid in hybrids:
+        arms=[full_base,hybrid,controls[hybrid['id']]]
+        for confidence in plan['detector']['confidence']:
+            results=[get_metrics(arm,confidence) for arm in arms]
+            for index,matching in enumerate(candidates):
+                scores={name:report[index] for name,report in zip(('yolo_fullframe','yolo_hybrid','yolo_fullframe_highres'),results)}
+                mean_f1=sum(r['f1'] for r in scores.values())/3
+                mean_cov=sum(r['coverage'] for r in scores.values())/3
+                mean_mae=sum(r['mae_vacant_count'] for r in scores.values())/3
+                pixels=sum(item['budget']['input_pixels'] for item in get_raw(hybrid).values())/len(val)
+                joint.append(dict(candidate_id=len(joint),tiling=hybrid['tiling'],hybrid_id=hybrid['id'],
+                                  confidence=confidence,matching=matching,methods=scores,
+                                  mean_f1=mean_f1,mean_coverage=mean_cov,mean_mae_vacant_count=mean_mae,
+                                  hybrid_mean_input_pixels=pixels,status='evaluated'))
+            _validation_write(out/'detector_search.json',joint)
+            print(f'Search {hybrid["id"]} conf={confidence}: {len(joint)} candidates recorded',flush=True)
+    def rank(item):
+        return (item['mean_f1'],item['mean_coverage'],-item['mean_mae_vacant_count'],-item['hybrid_mean_input_pixels'],-item['candidate_id'])
+    winner=max(joint,key=rank)
+    defaults=[j for j in joint if j['tiling']['padding']==plan['default']['padding'] and j['tiling']['overlap']==plan['default']['overlap']
+              and j['confidence']==plan['default']['confidence'] and j['matching']==plan['default']['matching']]
+    if len(defaults)!=1:
+        raise ValueError('Preregistered default must be in the search grid exactly once')
+    baseline=defaults[0]
+    for item in joint:
+        item['delta_mean_f1_from_default']=item['mean_f1']-baseline['mean_f1']
+        item['improved_over_default']=rank(item)>rank(baseline)
+        item['selected']=item['candidate_id']==winner['candidate_id']
+    _validation_write(out/'detector_search.json',joint)
+    chosen=next(h for h in hybrids if h['id']==winner['hybrid_id'])
+    methods=[dict(id='hog_svm',kind='hog'),full_base,dict(chosen,id='yolo_hybrid'),
+             dict(controls[chosen['id']],id='yolo_fullframe_highres')]
+    selected_reports={};budgets={}
+    for variant in methods:
+        folder=out/'selected'/variant['id']
+        report,frame_budgets=_validation_benchmark(val,root,layouts,refs,model,variant,plan,winner['matching'],winner['confidence'],hog_bundle)
+        report['metadata'].update(run_key=run_key,protocol=plan['protocol'],complete=complete)
+        export_evaluation(report,folder);_validation_write(folder/'pixel_budget.json',frame_budgets)
+        selected_reports[variant['id']]=report['overall'];budgets[variant['id']]=frame_budgets
+    if any(a['input_pixels']!=b['input_pixels'] for a,b in zip(budgets['yolo_hybrid'],budgets['yolo_fullframe_highres'])):
+        raise AssertionError('Full-frame control does not match the selected tiling pixel budget')
+    summary=dict(complete=complete,selected_on='val',test_inference_performed=False,counts=frozen['counts'],
+                 selected=winner,methods=selected_reports,pixel_budget_exactly_matched=True,environment=environment,
+                 candidates=dict(hog=len(hog_search),detector_joint=len(joint)))
+    _validation_write(out/'validation_summary.json',summary)
+    import csv
+    with (out/'comparison.csv').open('w',newline='') as stream:
+        fields=['method','f1','accuracy','precision','recall','coverage','false_vacancy_rate','mae_vacant_count','ms_per_original_image','input_pixels_mean']
+        writer=csv.DictWriter(stream,fieldnames=fields);writer.writeheader()
+        for method,metrics in selected_reports.items():
+            writer.writerow(dict(method=method,**{k:metrics[k] for k in fields[1:-2]},
+                                 ms_per_original_image=metrics['timing']['total_ms_mean'],
+                                 input_pixels_mean=sum(b['input_pixels'] for b in budgets[method])/len(val)))
+    if complete:
+        locked=dict(schema_version=1,complete=True,selected_on='val',test_inference_performed=False,
+            protocol=plan['protocol'],dataset_version=plan['dataset_version'],manifest_sha256=manifests,
+            checkpoint_sha256=plan['checkpoint']['sha256'],checkpoint_source=plan['checkpoint']['url'],
+            hog_model_sha256=_validation_sha(hpath),geometry_reference_sha256=_validation_sha(ref_path),
+            engine_sha256=engine,plan_sha256=_validation_hash(plan),environment=environment,
+            selected=dict(confidence=winner['confidence'],occupancy_config=winner['matching'],tiling=winner['tiling'],
+                          highres_shapes=controls[chosen['id']]['shapes'],hog_C=hog_bundle['selected_C'],hog_threshold=hog_bundle['decision_threshold']),
+            geometry_config=plan['geometry'],geometry_quality_config=plan['geometry_quality'],geometry_policy=plan['geometry_policy'],
+            detector_config=plan['detector'],hybrid_postprocessing={k:v for k,v in plan['hybrid'].items() if k not in ('padding','overlap')},
+            counts=frozen['counts'],selection_rule=plan['selection_rule'])
+        _validation_write(out/'locked_config.json',locked)
+    print('Validation complete' if complete else 'PARTIAL validation; NO final-test lock created',flush=True)
+    return summary
+
+
 def prepare_main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--raw", default="data/raw")
@@ -1660,12 +2195,107 @@ def evaluation_main(argv=None):
     print(json.dumps(report["overall"],indent=2,allow_nan=False))
 
 
+def run_locked_test(dataset_root,manifest_dir,validation_dir,checkpoint,output,device='cpu'):
+    """Explicit final test only after verifying the validation lock; never selects parameters."""
+    import joblib,torch,cv2,platform
+    md,valdir,out=Path(manifest_dir),Path(validation_dir),Path(output)
+    lock=verify_validation_lock(valdir/'locked_config.json',md,checkpoint)
+    plan=json.loads((valdir/'preregistered_plan.json').read_text())['plan']
+    if _validation_hash(plan)!=lock['plan_sha256']:
+        raise ValueError('Validation plan changed after locking')
+    # Same deterministic geometry-only budget rule also applies to unseen camera layouts.
+    import numpy as np
+
+    if out.resolve()==valdir.resolve() or out.resolve().is_relative_to((valdir/'selected').resolve()):
+        raise ValueError('Keep final-test evidence separate from validation results')
+    if device=='auto':
+        device='0' if torch.cuda.is_available() else 'cpu'
+    torch.set_num_threads(plan['cpu_threads']);cv2.setNumThreads(1)
+    torch.use_deterministic_algorithms(True,warn_only=True)
+    selected=lock['selected']
+    refs=joblib.load(valdir/'geometry_references.joblib')
+    bundle=joblib.load(valdir/'hog_svm.joblib')
+    records=_read_jsonl(md/'test.jsonl')
+    layouts=json.loads((md.parent/'slot_geometries.json').read_text())['layouts']
+    model=_ValidationYOLO(checkpoint,plan['detector'],device)
+    highres_shapes=dict(selected['highres_shapes'])
+    for gid in {r['geometry_id'] for r in records}:
+        layout=layouts[gid]
+        tiling=make_parking_tiles(np.zeros((layout['height'],layout['width'],3),dtype=np.uint8),layout,**selected['tiling'])
+        shape=validation_pixel_shape(len(tiling['tiles']),plan['detector']['base_imgsz'])
+        if gid in highres_shapes and highres_shapes[gid]!=shape:
+            raise ValueError('Locked high-resolution budget differs from locked tiling')
+        highres_shapes[gid]=shape
+    methods=[dict(id='hog_svm',kind='hog'),dict(id='yolo_fullframe',kind='full'),
+             dict(id='yolo_hybrid',kind='hybrid',tiling=selected['tiling']),
+             dict(id='yolo_fullframe_highres',kind='full',shapes=highres_shapes)]
+    reports={}
+    for variant in methods:
+        print('LOCKED FINAL TEST:',variant['id'],'no parameter search',flush=True)
+        report,budgets=_validation_benchmark(records,dataset_root,layouts,refs,model,variant,plan,
+                                             selected['occupancy_config'],selected['confidence'],bundle)
+        report['metadata'].update(split='test',protocol=lock['protocol'],complete=True,device=str(device),
+            validation_lock_sha256=_validation_sha(valdir/'locked_config.json'),selected_on='val',no_test_parameter_selection=True,
+            execution_environment=dict(python=platform.python_version(),torch=torch.__version__,opencv=cv2.__version__,device=str(device)))
+        export_evaluation(report,out/variant['id'])
+        _validation_write(out/variant['id']/'pixel_budget.json',budgets)
+        reports[variant['id']]=report
+    _validation_write(out/'test_summary.json',{name:r['overall'] for name,r in reports.items()})
+    return reports
+
+
+def _validation_reset_pixel_observers(predictor):
+    # Ultralytics calls this event AFTER backend warm-up, before actual inputs.
+    # GPU warm-up can otherwise be counted as a second image by our tensor hook.
+    backend=getattr(predictor,"model",None)
+    model=getattr(backend,"model",None)
+    for hook in getattr(model,"_forward_pre_hooks",{}).values():
+        owner=getattr(hook,"__self__",None)
+        if isinstance(owner,_ValidationYOLO):
+            owner._pixels=[]
+
+
+def prepare_validation_runtime():
+    """Install an observer-only callback; never changes weights or predictions."""
+    try:
+        from ultralytics.utils import callbacks
+    except ImportError:
+        return False
+    event=callbacks.default_callbacks.setdefault("on_predict_start",[])
+    event[:]=[callback for callback in event if getattr(callback,"__name__","")!="_validation_reset_pixel_observers"]
+    event.append(_validation_reset_pixel_observers)
+    return True
+
+
+def validation_main(argv=None):
+    parser=argparse.ArgumentParser(description='Preregistered validation only; no final-test inference')
+    parser.add_argument('--dataset-root',required=True)
+    parser.add_argument('--manifest-dir',default='data/manifests/pklot_v1/within_camera')
+    parser.add_argument('--plan',default='configs/validation_v1.json')
+    parser.add_argument('--checkpoint',default='models/yolo11n.pt')
+    parser.add_argument('--output',default='outputs/validation_v1')
+    parser.add_argument('--device',default='cpu')
+    parser.add_argument('--max-val-frames',type=int)
+    parser.add_argument('--max-train-frames',type=int)
+    args=parser.parse_args(argv)
+    try:
+        summary=run_validation_search(args.dataset_root,args.manifest_dir,args.output,args.plan,args.checkpoint,
+                                      args.device,args.max_val_frames,args.max_train_frames)
+    except Exception as exc:
+        _validation_write(Path(args.output)/'failure.json',dict(error_type=type(exc).__name__,message=str(exc),
+                                                               final_test_authorized=False))
+        raise
+    (Path(args.output)/'failure.json').unlink(missing_ok=True)
+    print(json.dumps(dict(complete=summary['complete'],counts=summary['counts'],candidates=summary['candidates'],
+        comparison={name:{k:m[k] for k in ('f1','accuracy','coverage','mae_vacant_count')} for name,m in summary['methods'].items()}),indent=2))
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description="PKLot single-file pipeline")
-    parser.add_argument("command", choices=["prepare", "audit", "splits", "evaluate"])
+    parser.add_argument("command", choices=["prepare", "audit", "splits", "evaluate", "validate"])
     argv = list(sys.argv[1:] if argv is None else argv)
     args = parser.parse_args(argv[:1])
-    {"prepare":prepare_main,"audit":audit_main,"splits":project_splits_main,"evaluate":evaluation_main}[args.command](argv[1:])
+    {"prepare":prepare_main,"audit":audit_main,"splits":project_splits_main,"evaluate":evaluation_main,"validate":validation_main}[args.command](argv[1:])
 
 if __name__ == "__main__":
     main()

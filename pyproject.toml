@@ -8,6 +8,10 @@ version = "0.1.0"
 requires-python = ">=3.10"
 dependencies = ["Pillow>=10,<13", "numpy>=1.26,<3", "opencv-python-headless>=4.10,<5"]
 
+[project.optional-dependencies]
+validation = ["ultralytics==8.4.0", "opencv-python>=4.10,<5", "scikit-image>=0.25,<1",
+              "scikit-learn>=1.6,<2", "joblib>=1.4,<2", "matplotlib>=3.9,<4"]
+
 [project.scripts]
 parking-audit = "parking_occupancy.pklot:main"
 

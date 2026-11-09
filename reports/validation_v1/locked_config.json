@@ -1,0 +1,127 @@
+{
+  "checkpoint_sha256": "0ebbc80d4a7680d14987a577cd21342b65ecfd94632bd9a8da63ae6417644ee1",
+  "checkpoint_source": "https://github.com/ultralytics/assets/releases/download/v8.3.0/yolo11n.pt",
+  "complete": true,
+  "counts": {
+    "train": 1182,
+    "val": 270
+  },
+  "dataset_version": "pklot_v1",
+  "detector_config": {
+    "base_imgsz": 640,
+    "classes": [
+      "car",
+      "bus",
+      "truck"
+    ],
+    "confidence": [
+      0.15,
+      0.25
+    ],
+    "confidence_floor": 0.15,
+    "iou": 0.7,
+    "max_det": 300,
+    "rect": false
+  },
+  "engine_sha256": "698336db95e47902280d7438d7bdcd7b8c4dd1ad0b404c9a7f137e87a534a02a",
+  "environment": {
+    "device": "cpu",
+    "numpy": "2.5.4",
+    "opencv": "4.14.0",
+    "python": "3.14.7",
+    "skimage": "0.26.0",
+    "sklearn": "1.9.1",
+    "torch": "2.15.0+cpu",
+    "ultralytics": "8.4.0"
+  },
+  "geometry_config": {
+    "angle_tolerance_deg": 12.0,
+    "boundary_distance": 6.0,
+    "canny_high": 150,
+    "canny_low": 50,
+    "gaussian_kernel": 5,
+    "gaussian_sigma": 1.2,
+    "hough_votes": 20,
+    "max_line_gap": 10,
+    "min_edge_support": 0.25,
+    "min_line_length": 20,
+    "min_roi_fraction": 0.9,
+    "min_supported_edges": 2,
+    "roi_margin": 8
+  },
+  "geometry_policy": "unknown",
+  "geometry_quality_config": {
+    "lost_support_ratio": 0.35,
+    "min_segment_ratio": 0.25,
+    "reference_padding": 40,
+    "reliable_supported_rate": 0.5,
+    "shift_tolerance_px": 6.0
+  },
+  "geometry_reference_sha256": "473eb2253783620e50248f176e39df386971e237c1dc2634f33df11fd537e4fb",
+  "hog_model_sha256": "094c4808be000e61cd20b3c6f04bed70466df7c991c4eab22a5c9ca7077910e6",
+  "hybrid_postprocessing": {
+    "edge_margin_px": 4,
+    "global_nms_iou": 0.5,
+    "grid": [
+      2,
+      2
+    ],
+    "max_overlap": 0.6,
+    "min_box_size_px": 2,
+    "min_tile_size": 256
+  },
+  "manifest_sha256": {
+    "../slot_geometries.json": "a9b26e65a9729f0910f088ffd01f1b2263cc375a5a719d5e03b59208acbff0ff",
+    "../split_lock.json": "2827a11eb3f846d11f4487368bfde8d16d6a34e2afa326fe7d73dc0e13da04d9",
+    "test.jsonl": "f9d88dd35e94bc8dc1214b427e7c182ce7b14c3864bfeae6031c84ed0a0ba41f",
+    "train.jsonl": "7bd9a3e1682e2b3365abfb2ae23594a18d35eb813a4cc72d5dcc8d7c42892004",
+    "val.jsonl": "0ec49352106fce0fc5aa028305756ed6d57ea1d0d935fcf442074d7974604525"
+  },
+  "plan_sha256": "9e3b2156bb79d6a8c75ed9aba390d766e8b8b9f134ff0ed687b455c05cd73046",
+  "protocol": "within_camera",
+  "schema_version": 1,
+  "selected": {
+    "confidence": 0.15,
+    "highres_shapes": {
+      "PUCPR_ed651d8e7b980222": [
+        640,
+        1280
+      ],
+      "UFPR04_38ea1f973c7f01a2": [
+        1280,
+        1280
+      ],
+      "UFPR04_d9e74d220b252cea": [
+        1280,
+        1280
+      ],
+      "UFPR05_d428ebf84a8a4208": [
+        1280,
+        1280
+      ]
+    },
+    "hog_C": 0.01,
+    "hog_threshold": -0.25,
+    "occupancy_config": {
+      "ambiguity_margin": 0.0,
+      "lower_fraction": 0.67,
+      "min_overlap": 0.2,
+      "min_score": 0.15,
+      "nms_iou": 0.5
+    },
+    "tiling": {
+      "grid": [
+        2,
+        2
+      ],
+      "max_overlap": 0.6,
+      "min_tile_size": 256,
+      "output_size": null,
+      "overlap": 0.2,
+      "padding": 16
+    }
+  },
+  "selected_on": "val",
+  "selection_rule": "Shared confidence/matching for all YOLO arms; rank joint mean F1, coverage, negative vacant MAE, lower hybrid tensor pixels, original grid order. HOG: F1, coverage, negative MAE, smaller C, threshold closest to zero. No test inference.",
+  "test_inference_performed": false
+}

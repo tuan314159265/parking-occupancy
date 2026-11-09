@@ -27,3 +27,7 @@ Mã xử lý được gom vào parking_module.py tại gốc repository. Noteboo
 
 Đã review và merge nhánh feat/parking-line-geometry (4.2, 4.3, 4.6, 6.2 của Văn). Đã tăng tốc analyze_parking_geometry khoảng 23 lần với đầu ra không đổi, và giữ LF cho manifest trên Windows. Đã thêm cờ hình học yếu so với tham chiếu train (build_geometry_reference, assess_geometry_quality, apply_geometry_policy) cùng 11 test. Đã hoàn thiện notebook mục 5 (pipeline, hình 6 panel, CSV/JSON), 6.2b, 6.3, 7–9. Toàn bộ notebook đã chạy trên 141 ảnh PKLot thật lấy từ đầu archive, nhưng nhãn không khớp ảnh nên chưa có số liệu thực nghiệm; cần Run All trên Colab với dataset đầy đủ. Xem docs/pipeline-integration.md.
 
+
+## 09/11/2026 — task 12 (within_camera)
+
+Đã fetch/review main 293893d, giữ bản sửa local riêng, chạy validation thật trên đủ 1.182 train / 270 validation. Đã thử 9 cấu hình HOG và 144 tổ hợp detector; 66 tổ hợp không tăng mean F1 so với mặc định, vẫn được lưu. Thêm YOLO toàn ảnh khớp số pixel tensor thật với tiling; benchmark lại bốn phương pháp end-to-end. Đã khóa checkpoint, split, model, tham chiếu hình học, phiên bản và quy tắc trước lượt test mới. Kết quả và toàn bộ grid nhẹ ở reports/validation_v1; cache/model/chi tiết ở outputs/validation_v1. 113 kiểm thử đạt. Không chạy lại test trong task này; notebook cũ đã có output test nên không gọi test v1 là holdout chưa quan sát. Giao thức chuyển camera chưa chạy validation mới.

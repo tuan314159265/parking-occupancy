@@ -1,0 +1,40 @@
+{
+  "checkpoint_sha256": "0ebbc80d4a7680d14987a577cd21342b65ecfd94632bd9a8da63ae6417644ee1",
+  "cpu": "12th Gen Intel(R) Core(TM) i9-12900H",
+  "engine_sha256": "698336db95e47902280d7438d7bdcd7b8c4dd1ad0b404c9a7f137e87a534a02a",
+  "environment": {
+    "device": "cpu",
+    "numpy": "2.5.4",
+    "opencv": "4.14.0",
+    "python": "3.14.7",
+    "skimage": "0.26.0",
+    "sklearn": "1.9.1",
+    "torch": "2.15.0+cpu",
+    "ultralytics": "8.4.0"
+  },
+  "legacy_test_outputs_present_at_start": true,
+  "new_test_inference_performed": false,
+  "opencv_threads": 1,
+  "other_blas_threads": "not separately constrained during HOG feature/decision inference",
+  "packages": {
+    "Pillow": "12.3.0",
+    "joblib": "1.6.0",
+    "numpy": "2.5.4",
+    "opencv-python": "4.14.0.94",
+    "opencv-python-headless": "4.14.0.94",
+    "scikit-image": "0.26.0",
+    "scikit-learn": "1.9.1",
+    "scipy": "1.18.1",
+    "threadpoolctl": "3.8.0",
+    "torch": "2.15.0+cpu",
+    "torchvision": "0.29.2+cpu",
+    "ultralytics": "8.4.0"
+  },
+  "platform": "Linux-7.1.8-1-cachyos-x86_64-with-glibc2.44",
+  "raw_hog_search_sha256": "c5d838f24f4e1e658d61c6985bcc4e57085dd01ca16f0087ba9dd46687f720f1",
+  "raw_search_sha256": "7fd64575a24928cbc92943ea5932f00cac17bf40bdfe6c877588a637e163bcb9",
+  "reviewed_main_commit": "293893df",
+  "svm_fit_blas_thread_limit": 2,
+  "torch_cpu_threads": 2,
+  "validation_only": true
+}

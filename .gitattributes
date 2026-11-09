@@ -1,2 +1,9 @@
 # Frozen manifests are checksummed in split_lock.json; keep LF on every OS.
 data/manifests/** text eol=lf
+
+# Published validation artifacts have byte-level checksums.
+reports/**/*.json text eol=lf
+reports/**/*.csv text eol=lf
+reports/**/*.md text eol=lf
+reports/**/*.png binary
+configs/validation_v1.json text eol=lf
