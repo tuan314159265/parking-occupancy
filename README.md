@@ -165,3 +165,9 @@ Luồng mới dùng `configs/validation_v1.json`: 9 cấu hình HOG/SVM, 144 t�
 Xem [giao thức validation, cache và khóa trước test](docs/validation.md). Đầu ra chính là comparison.csv, detector_search.json, hog_search.json và locked_config.json trong outputs/validation_v1 (CLI) hoặc OUTPUT_DIR/PROTOCOL/validation_v1 (Colab). Không coi số liệu validation đã dùng chọn tham số là kết quả test độc lập.
 
 Kết quả validation CPU thực tế đã được lưu tại [reports/validation_v1](reports/validation_v1/README.md), gồm bảng, biểu đồ, toàn bộ 153 cấu hình và khóa. Đây là giao thức within_camera; chưa chạy lại test hoặc validation chuyển camera. Lịch sử test cũ được ghi rõ trong báo cáo. Cache/source/model được kiểm tra khi dùng lại lượt đã hoàn tất.
+
+## Chạy validation và test trong cùng một notebook
+
+Dùng `notebooks/01_pklot_run_all.ipynb` cho toàn bộ luồng. Có kết quả validation rồi giữ `RUN_VALIDATION_SEARCH=False`; mục 6.2 đọc lại model/khóa, mục 6.3a kiểm tra và mục 6.3b chỉ chạy test khi `RUN_FINAL_TEST=True`. Mục 6.3c–e xuất bảng, ảnh đúng/sai/unknown và checksum; mục 7 hiển thị ngay trong notebook. Giữ cờ test False để đọc kết quả đã có mà không inference lại.
+
+Code, split và plan local/bundle được ưu tiên dùng lại. Runtime Colab mới có thể khôi phục gói `parking-final-test-bundle.zip` bằng `LOCKED_BUNDLE_ZIP`, còn dataset ảnh dùng đường dẫn riêng. Gói chứa model/checkpoint/metadata, không chứa PKLot và không thay thế yêu cầu phiên bản thư viện khớp khóa. Notebook 02 chỉ còn là bản thực hành tùy chọn. Hướng dẫn từng bước đã có ngay trong notebook chính và bộ ghi chú Obsidian của dự án.
