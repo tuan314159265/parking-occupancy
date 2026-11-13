@@ -6,6 +6,7 @@ data/raw/*
 !data/raw/.gitkeep
 outputs/*
 !outputs/.gitkeep
+/splits/
 *.aux
 *.log
 *.out
