@@ -1,0 +1,23 @@
+# Môi trường đầy đủ: notebook, validation và test cuối.
+#
+# Các phiên bản ghim "==" khớp reports/validation_v1/locked_config.json ("environment").
+# verify_validation_lock() từ chối chạy test nếu numpy/opencv/torch/ultralytics/
+# scikit-image/scikit-learn khác phiên bản đã khóa. Validation gốc chạy Python 3.14, CPU.
+#
+# Cài torch bản CPU (nhẹ hơn bản CUDA):
+#   pip install torch==2.15.0 --index-url https://download.pytorch.org/whl/cpu
+#   pip install -r requirements.txt
+# Trên Colab GPU, torch có sẵn có thể khác 2.15.0: xem README, mục "Test cuối".
+
+numpy==2.5.4
+opencv-python==4.14.0.94
+opencv-python-headless==4.14.0.94
+torch==2.15.0
+ultralytics==8.4.0
+scikit-image==0.26.0
+scikit-learn==1.9.1
+
+# Không nằm trong kiểm tra khóa; giữ khoảng tương thích.
+Pillow>=10,<13
+joblib>=1.4,<2
+matplotlib>=3.9,<4

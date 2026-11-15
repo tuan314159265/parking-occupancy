@@ -112,7 +112,7 @@ class ParkingTileTests(unittest.TestCase):
         json.dumps(metadata)
 
     def test_all_frozen_layouts_retain_every_space_and_context(self):
-        layouts = json.loads((REPO / "data/manifests/pklot_v1/slot_geometries.json").read_text())["layouts"]
+        layouts = json.loads((REPO / "data/manifests/pklot_v1/slot_geometries.json").read_text(encoding="utf-8"))["layouts"]
         for geometry_id, layout in layouts.items():
             with self.subTest(geometry_id=geometry_id):
                 image = np.zeros((layout["height"], layout["width"], 3), dtype=np.uint8)
@@ -144,7 +144,7 @@ class ParkingTileTests(unittest.TestCase):
         matplotlib.use("Agg")
         import matplotlib.pyplot as plt
 
-        notebook = json.loads((REPO / "notebooks/01_pklot_run_all.ipynb").read_text())
+        notebook = json.loads((REPO / "notebooks/01_pklot_run_all.ipynb").read_text(encoding="utf-8"))
         cells = {c.get("id"): "".join(c["source"]) for c in notebook["cells"]}
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -168,7 +168,7 @@ class ParkingTileTests(unittest.TestCase):
             self.assertTrue(result["all_context_covered"])
             self.assertEqual(result["tiles"][0]["image"].shape[-1], 3)
             figure = namespace["show_parking_tiles"](self.image, layout, result, "Synthetic color ROI check")
-            figure.savefig("/tmp/parking-tiles-preview.png", dpi=100)
+            figure.savefig(Path(tempfile.gettempdir()) / "parking-tiles-preview.png", dpi=100)
             plt.close(figure)
             namespace["TRAIN_FRAMES"] = [dict(record, split="test")]
             with self.assertRaisesRegex(ValueError, "training frames"):

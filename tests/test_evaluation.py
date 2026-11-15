@@ -149,7 +149,7 @@ class EvaluationTests(unittest.TestCase):
         report=p.evaluate_occupancy(self.truth,self.pred,self.times,method='fixture')
         with tempfile.TemporaryDirectory() as temp:
             output=p.export_evaluation(report,temp)
-            data=json.loads((output/'metrics.json').read_text())
+            data=json.loads((output/'metrics.json').read_text(encoding="utf-8"))
             self.assertEqual(data['method'],'fixture')
             self.assertNotIn('per_slot',data)
             with (output/'per_slot.csv').open() as stream:slots=list(csv.DictReader(stream))
@@ -158,7 +158,7 @@ class EvaluationTests(unittest.TestCase):
             self.assertEqual(len(frames),2)
             self.assertEqual(frames[1]['total_ms'],'120.0')
             self.assertEqual(sum(s['y_pred']=='' for s in slots),2)
-            self.assertEqual(len((output/'aligned_predictions.jsonl').read_text().splitlines()),7)
+            self.assertEqual(len((output/'aligned_predictions.jsonl').read_text(encoding="utf-8").splitlines()),7)
 
     def test_frame_ground_truth_and_invalid_input_types(self):
         frame=p.Frame('A','image.jpg','image.xml','cam','sunny','2026-11-04',10,10,
@@ -180,7 +180,7 @@ class EvaluationTests(unittest.TestCase):
                      '--method','synthetic_cli_check','--output',str(directory/'result')]
             result=subprocess.run(command,cwd=temp,check=True,capture_output=True,text=True)
             self.assertAlmostEqual(json.loads(result.stdout)['accuracy'],3/7)
-            output=json.loads((directory/'result/metrics.json').read_text())
+            output=json.loads((directory/'result/metrics.json').read_text(encoding="utf-8"))
             self.assertEqual(len(output['metadata']['manifest_sha256']),64)
             self.assertEqual(len(output['metadata']['timings_sha256']),64)
 

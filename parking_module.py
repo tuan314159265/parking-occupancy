@@ -138,7 +138,8 @@ def audit(root, output, seed=42):
     output.mkdir(parents=True, exist_ok=True)
     (output / "audit_summary.json").unlink(missing_ok=True)  # interrupted audit must not leave a usable cache
     stats, rejected, count = Counter(), 0, 0
-    with (output/"valid_samples.jsonl").open("w") as valid, (output/"issues.jsonl").open("w") as issues:
+    with (output/"valid_samples.jsonl").open("w", encoding="utf-8", newline="\n") as valid, \
+            (output/"issues.jsonl").open("w", encoding="utf-8", newline="\n") as issues:
         for path in xmls:
             try:
                 frame = read_frame(path, root)
@@ -163,7 +164,7 @@ def audit(root, output, seed=42):
                 issues.write(json.dumps({"path":image.relative_to(root).as_posix(), "error":"missing XML"})+"\n")
     summary = dict(audit_version=AUDIT_VERSION, root=str(root), seed=seed, xml_count=len(xmls), valid_frames=count,
                    rejected_frames=rejected, images_without_xml=orphan, counts=dict(stats))
-    (output/"audit_summary.json").write_text(json.dumps(summary, indent=2)+"\n")
+    (output/"audit_summary.json").write_text(json.dumps(summary, indent=2)+"\n", encoding="utf-8", newline="\n")
     return summary
 
 def audit_main(argv=None):
@@ -484,7 +485,7 @@ def export_evaluation(report, output):
     output = Path(output)
     output.mkdir(parents=True,exist_ok=True)
     aggregate = {key:value for key,value in report.items() if key not in ("per_frame","per_slot")}
-    (output/"metrics.json").write_text(json.dumps(aggregate,ensure_ascii=False,allow_nan=False,indent=2)+"\n")
+    (output/"metrics.json").write_text(json.dumps(aggregate,ensure_ascii=False,allow_nan=False,indent=2)+"\n", encoding="utf-8", newline="\n")
     frames = []
     for row in report["per_frame"]:
         record = {key:value for key,value in row.items() if key != "timing"}
@@ -492,11 +493,11 @@ def export_evaluation(report, output):
             record[key] = None if row["timing"] is None else row["timing"][key]
         frames.append(record)
     for filename,rows in (("per_frame.csv",frames),("per_slot.csv",report["per_slot"])):
-        with (output/filename).open("w",newline="") as stream:
+        with (output/filename).open("w", encoding="utf-8", newline="") as stream:
             writer = csv.DictWriter(stream,fieldnames=list(rows[0]))
             writer.writeheader()
             writer.writerows(rows)
-    with (output/"aligned_predictions.jsonl").open("w") as stream:
+    with (output/"aligned_predictions.jsonl").open("w", encoding="utf-8", newline="\n") as stream:
         for row in report["per_slot"]:
             stream.write(json.dumps(row,ensure_ascii=False,allow_nan=False)+"\n")
     return output
@@ -583,7 +584,7 @@ def prepare(raw, output, download=True):
 def _cached_audit(root, source, seed, allow_rebase=False):
     """Fast cache check, not a new full audit. Dataset must remain unchanged."""
     try:
-        summary = json.loads((source / "audit_summary.json").read_text())
+        summary = json.loads((source / "audit_summary.json").read_text(encoding="utf-8"))
         if (summary.get("audit_version") != AUDIT_VERSION or summary.get("seed") != seed
                 or summary.get("valid_frames", 0) <= 0):
             return None
@@ -591,7 +592,7 @@ def _cached_audit(root, source, seed, allow_rebase=False):
             return None
         if not (source / "issues.jsonl").is_file():
             return None
-        with (source / "valid_samples.jsonl").open() as stream:
+        with (source / "valid_samples.jsonl").open(encoding="utf-8") as stream:
             sample = json.loads(next(stream))
         # Verify one actual frame against the cached record, including labels and geometry.
         # Relative paths allow a shared manifest to work under another user's Drive shortcut.
@@ -661,7 +662,7 @@ def ensure_dataset(raw, output, dataset_root=None, cached_audit_dir=None,
                     (output / "audit_summary.json").unlink(missing_ok=True)
                     for name in ("valid_samples.jsonl", "issues.jsonl"):
                         shutil.copyfile(source / name, output / name)
-                    (output / "audit_summary.json").write_text(json.dumps(summary, indent=2)+"\n")
+                    (output / "audit_summary.json").write_text(json.dumps(summary, indent=2)+"\n", encoding="utf-8", newline="\n")
                 print("Reuse audit/manifest; skip full audit (checked one sample).")
                 return summary
     print("No compatible audit cache or FORCE_AUDIT=True; audit existing dataset once.")
@@ -677,7 +678,7 @@ WEATHERS = ("sunny", "overcast", "rainy")
 
 
 def _read_jsonl(path):
-    with Path(path).open() as stream:
+    with Path(path).open(encoding="utf-8") as stream:
         return [json.loads(line) for line in stream if line.strip()]
 
 
@@ -789,15 +790,15 @@ def build_project_splits(manifest, output, config, overwrite=False):
     """Freeze a shared metadata-based subset and polygon layouts for every method."""
     manifest, output = Path(manifest), Path(output)
     if isinstance(config, (str,Path)):
-        config = json.loads(Path(config).read_text())
-    summary = json.loads((manifest.parent/"audit_summary.json").read_text())
+        config = json.loads(Path(config).read_text(encoding="utf-8"))
+    summary = json.loads((manifest.parent/"audit_summary.json").read_text(encoding="utf-8"))
     if summary.get("audit_version") != AUDIT_VERSION:
         raise ValueError("Run audit with the current loader before freezing project splits")
     source_sha = hashlib.sha256(manifest.read_bytes()).hexdigest()
     config_sha = hashlib.sha256(json.dumps(config, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
     lock_file = output/"split_lock.json"
     if lock_file.exists() and not overwrite:
-        lock = json.loads(lock_file.read_text())
+        lock = json.loads(lock_file.read_text(encoding="utf-8"))
         if lock["source_manifest_sha256"] != source_sha or lock["config_sha256"] != config_sha:
             raise ValueError("Existing split is locked to another inventory/config. Use a new dataset_version/output directory")
         for filename,digest in lock["artifacts_sha256"].items():
@@ -883,22 +884,22 @@ def build_project_splits(manifest, output, config, overwrite=False):
     for name,content in artifacts.items():
         path=output/name
         path.parent.mkdir(parents=True,exist_ok=True)
-        path.write_text(content)
-    lock_file.write_text(json.dumps(lock,sort_keys=True,indent=2)+"\n")
+        path.write_text(content, encoding="utf-8", newline="\n")
+    lock_file.write_text(json.dumps(lock,sort_keys=True,indent=2)+"\n", encoding="utf-8", newline="\n")
     return lock
 
 
 def load_project_splits(directory):
     """Load and verify the exact versioned manifests distributed to the team."""
     directory = Path(directory)
-    lock = json.loads((directory/"split_lock.json").read_text())
+    lock = json.loads((directory/"split_lock.json").read_text(encoding="utf-8"))
     for name,digest in lock["artifacts_sha256"].items():
         path = (directory/name).resolve()
         if not path.is_relative_to(directory.resolve()):
             raise ValueError("Artifact path escapes manifest directory")
         if hashlib.sha256(path.read_bytes()).hexdigest() != digest:
             raise ValueError(f"Frozen artifact checksum mismatch: {name}")
-    geometry = json.loads((directory/"slot_geometries.json").read_text())["layouts"]
+    geometry = json.loads((directory/"slot_geometries.json").read_text(encoding="utf-8"))["layouts"]
     protocols = {}
     for name,report in lock["protocols"].items():
         manifests = {split:_read_jsonl(directory/name/f"{split}.jsonl") for split in ("train","val","test")}
@@ -1617,7 +1618,7 @@ def _validation_write(path, value):
     path=Path(path)
     path.parent.mkdir(parents=True,exist_ok=True)
     temp=path.with_suffix(path.suffix+'.tmp')
-    temp.write_text(json.dumps(value,sort_keys=True,ensure_ascii=False,allow_nan=False,indent=2)+'\n')
+    temp.write_text(json.dumps(value,sort_keys=True,ensure_ascii=False,allow_nan=False,indent=2)+'\n', encoding="utf-8", newline="\n")
     temp.replace(path)
 
 
@@ -1759,7 +1760,7 @@ def _validation_hog_matrix(records,root,cfg,directory,name,key):
     labels=np.asarray([label for row in records for label in row['labels'].values()],dtype=np.int32)
     width,height=cfg['win_size']
     dim=len(_validation_feature(np.zeros((height,width),dtype=np.uint8),[[0,0],[width,0],[width,height]],cfg))
-    if meta.is_file() and json.loads(meta.read_text()).get('key')==key:
+    if meta.is_file() and json.loads(meta.read_text(encoding="utf-8")).get('key')==key:
         matrix=np.load(path,mmap_mode='r')
         if matrix.shape==(len(labels),dim):
             print(f'HOG {name}: reuse features {matrix.shape}',flush=True)
@@ -1863,7 +1864,7 @@ def _validation_benchmark(records,root,layouts,refs,model,variant,plan,matching,
 
 def verify_validation_lock(lock_path,manifest_dir,checkpoint,model_path=None,require_complete=True):
     """Reject changed checkpoints/splits/code/models before any final-test inference."""
-    lock=json.loads(Path(lock_path).read_text())
+    lock=json.loads(Path(lock_path).read_text(encoding="utf-8"))
     if lock.get('selected_on')!='val' or (require_complete and not lock.get('complete')):
         raise ValueError('Only a complete validation run can authorize final testing')
     for name,digest in lock['manifest_sha256'].items():
@@ -2147,16 +2148,16 @@ def prepare_main(argv=None):
         status.parent.mkdir(parents=True, exist_ok=True)
         deadline = time.monotonic() + 24*3600
         while not archive.exists() or archive.stat().st_size < EXPECTED_BYTES:
-            status.write_text(json.dumps(dict(stage="downloading", bytes=archive.stat().st_size if archive.exists() else 0, expected_bytes=EXPECTED_BYTES)))
+            status.write_text(json.dumps(dict(stage="downloading", bytes=archive.stat().st_size if archive.exists() else 0, expected_bytes=EXPECTED_BYTES)), encoding="utf-8", newline="\n")
             if time.monotonic() >= deadline:
                 raise TimeoutError("Download not complete after 24 hours; resume prepare manually")
             time.sleep(15)
         args.no_download = True
-        status.write_text(json.dumps(dict(stage="extracting_and_auditing")))
+        status.write_text(json.dumps(dict(stage="extracting_and_auditing")), encoding="utf-8", newline="\n")
     result = prepare(args.raw, args.output, not args.no_download)
     print(json.dumps(result, indent=2))
     if args.wait_complete:
-        status.write_text(json.dumps(dict(stage="complete", summary=result), indent=2))
+        status.write_text(json.dumps(dict(stage="complete", summary=result), indent=2), encoding="utf-8", newline="\n")
 
 
 
@@ -2182,7 +2183,7 @@ def evaluation_main(argv=None):
     parser.add_argument("--metadata",help="Optional JSON object with protocol, split, device and environment")
     parser.add_argument("--output",default="outputs/evaluation")
     args = parser.parse_args(argv)
-    metadata = json.loads(Path(args.metadata).read_text()) if args.metadata else {}
+    metadata = json.loads(Path(args.metadata).read_text(encoding="utf-8")) if args.metadata else {}
     if not isinstance(metadata,dict):
         raise ValueError("Metadata JSON must be an object")
     metadata.update(manifest_sha256=hashlib.sha256(Path(args.manifest).read_bytes()).hexdigest(),
@@ -2200,7 +2201,7 @@ def run_locked_test(dataset_root,manifest_dir,validation_dir,checkpoint,output,d
     import joblib,torch,cv2,platform
     md,valdir,out=Path(manifest_dir),Path(validation_dir),Path(output)
     lock=verify_validation_lock(valdir/'locked_config.json',md,checkpoint)
-    plan=json.loads((valdir/'preregistered_plan.json').read_text())['plan']
+    plan=json.loads((valdir/'preregistered_plan.json').read_text(encoding="utf-8"))['plan']
     if _validation_hash(plan)!=lock['plan_sha256']:
         raise ValueError('Validation plan changed after locking')
     # Same deterministic geometry-only budget rule also applies to unseen camera layouts.
@@ -2216,7 +2217,7 @@ def run_locked_test(dataset_root,manifest_dir,validation_dir,checkpoint,output,d
     refs=joblib.load(valdir/'geometry_references.joblib')
     bundle=joblib.load(valdir/'hog_svm.joblib')
     records=_read_jsonl(md/'test.jsonl')
-    layouts=json.loads((md.parent/'slot_geometries.json').read_text())['layouts']
+    layouts=json.loads((md.parent/'slot_geometries.json').read_text(encoding="utf-8"))['layouts']
     model=_ValidationYOLO(checkpoint,plan['detector'],device)
     highres_shapes=dict(selected['highres_shapes'])
     for gid in {r['geometry_id'] for r in records}:

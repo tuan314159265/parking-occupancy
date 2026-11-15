@@ -117,7 +117,7 @@ class GeometryTests(unittest.TestCase):
             parking.analyze_parking_geometry(self.painted[:100], self.layout)
 
     def test_all_frozen_project_layouts_are_accepted(self):
-        layouts = json.loads((REPO / "data/manifests/pklot_v1/slot_geometries.json").read_text())["layouts"]
+        layouts = json.loads((REPO / "data/manifests/pklot_v1/slot_geometries.json").read_text(encoding="utf-8"))["layouts"]
         for geometry_id, layout in layouts.items():
             with self.subTest(geometry_id=geometry_id):
                 image = np.zeros((layout["height"], layout["width"], 3), dtype=np.uint8)
@@ -161,7 +161,7 @@ class GeometryTests(unittest.TestCase):
         matplotlib.use("Agg")
         import matplotlib.pyplot as plt
 
-        notebook = json.loads((REPO / "notebooks/01_pklot_run_all.ipynb").read_text())
+        notebook = json.loads((REPO / "notebooks/01_pklot_run_all.ipynb").read_text(encoding="utf-8"))
         cells = {cell.get("id"): "".join(cell["source"]) for cell in notebook["cells"]}
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -193,7 +193,7 @@ class GeometryTests(unittest.TestCase):
             with patch.object(plt, "show"):
                 for name in ("environment-imports", "pklot-2", "geometry-config", "geometry-visualization", "geometry-demo"):
                     exec(compile(cells[name], name, "exec"), namespace)
-            exported = json.loads((root / "outputs/full/within_camera/geometry/geometry_results.json").read_text())
+            exported = json.loads((root / "outputs/full/within_camera/geometry/geometry_results.json").read_text(encoding="utf-8"))
             self.assertEqual(exported["results"][0]["geometry_id"], geometry_id)
             self.assertEqual(exported["results"][0]["slots"][0]["quality_flag"], "supported")
             self.assertNotIn("images", exported["results"][0])

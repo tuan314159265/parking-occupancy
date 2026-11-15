@@ -1,173 +1,175 @@
-# Parking occupancy — PKLot
+# Nhận diện trạng thái ô đỗ xe — PKLot
 
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/tuan314159265/parking-occupancy/blob/main/notebooks/01_pklot_run_all.ipynb)
 
-## Chạy local
+Xác định từng ô đỗ trong ảnh camera cố định là **trống / có xe / unknown**, so sánh bốn phương pháp trên cùng split đã khóa của PKLot:
+
+| Phương pháp | Mô tả ngắn |
+|---|---|
+| HOG + SVM | Đặc trưng HOG trên từng ô (polygon) + Linear SVM |
+| YOLO full 640 | YOLO11n trên toàn ảnh, ảnh resize 640 |
+| Hybrid | Canny/Hough kiểm tra hình học → ROI/tile → YOLO11n trên tile → ghép xe–ô |
+| YOLO full pixel-matched | YOLO11n toàn ảnh với số pixel đầu vào bằng đúng hybrid (đối chứng) |
+
+- **Repository (public):** https://github.com/tuan314159265/parking-occupancy
+- **Notebook Colab (Run All):** https://colab.research.google.com/github/tuan314159265/parking-occupancy/blob/main/notebooks/01_pklot_run_all.ipynb
+
+## Kết quả validation (đã khóa)
+
+Giao thức `within_camera`, 270 ảnh validation (15.120 ô), CPU. Đây là số liệu **dùng để chọn tham số**, không phải test độc lập. Chi tiết, toàn bộ 153 cấu hình đã thử và biểu đồ: [reports/validation_v1](reports/validation_v1/README.md).
+
+| Phương pháp | F1 | Accuracy | Coverage | MAE số ô trống | ms/ảnh (CPU) |
+|---|---:|---:|---:|---:|---:|
+| HOG + SVM | 0.9888 | 0.9415 | 0.9538 | 3.093 | 267.4 |
+| YOLO full 640 | 0.5691 | 0.5855 | 0.8713 | 17.970 | 242.5 |
+| Hybrid 640 | 0.7439 | 0.6999 | 0.8920 | 12.674 | 504.4 |
+| YOLO full pixel-matched | 0.7418 | 0.6978 | 0.8819 | 12.311 | 430.8 |
+
+Accuracy tính *unknown* là sai; coverage là tỉ lệ ô có dự đoán. Công thức: [docs/evaluation.md](docs/evaluation.md).
+
+## Cấu trúc repository
+
+```
+parking_module.py          Toàn bộ mã xử lý (loader/audit, split, HOG, YOLO, hình học, tile, ghép, đánh giá, CLI)
+final_test_module.py       Các bước test cuối: kiểm tra khóa → chạy → bảng → ảnh minh họa → hash bằng chứng
+notebooks/01_pklot_run_all.ipynb   Notebook chính, chạy Run All trên Colab hoặc local
+scripts/run_final_test.py         CLI chạy test cuối (giống notebook mục 6.3)
+scripts/build_final_test_bundle.py  Đóng gói model/khóa để chuyển sang máy khác (không chứa dataset)
+scripts/export_validation_report.py Xuất báo cáo nhẹ vào reports/ sau một lượt validation đầy đủ
+configs/                   pklot_v1.json (split), validation_v1.json (plan tìm kiếm + checkpoint), default.json
+data/manifests/pklot_v1/   Split train/val/test và polygon ô đỗ đã khóa (có SHA256 trong split_lock.json)
+reports/validation_v1/     Kết quả validation, plan, khóa locked_config.json, hash
+src/parking_occupancy/     Lớp tương thích cho `pip install -e .` (chuyển tiếp tới parking_module)
+tests/                     136 unit test (không cần dataset, model hay mạng)
+docs/                      Giao thức dữ liệu, đánh giá, validation, pipeline, giao diện, nhật ký bàn giao
+```
+
+**Không có trong Git** (được `.gitignore` chặn): archive/ảnh/XML PKLot (`data/raw/`), checkpoint (`models/`, `*.pt`), model đã huấn luyện (`*.joblib`), cache/feature (`*.npy`), mọi kết quả chạy (`outputs/`) và gói bàn giao (`*.zip`). Repo không chứa thông tin đăng nhập hay đường dẫn cá nhân.
+
+## 1. Cài đặt
+
+Yêu cầu Python ≥ 3.10 (validation gốc chạy Python 3.14, CPU). Khoảng 10–15 GB trống cho dữ liệu.
 
 ```bash
+git clone https://github.com/tuan314159265/parking-occupancy.git
+cd parking-occupancy
 python -m venv .venv
-source .venv/bin/activate
-python -m pip install -e .
+source .venv/bin/activate            # Windows: .venv\Scripts\activate
+pip install torch==2.15.0 --index-url https://download.pytorch.org/whl/cpu
+pip install -r requirements.txt
+pip install -e .
+```
+
+[`requirements.txt`](requirements.txt) ghim **đúng** các phiên bản đã ghi trong khóa (numpy 2.5.4, opencv 4.14.0, torch 2.15.0, ultralytics 8.4.0, scikit-image 0.26.0, scikit-learn 1.9.1). Bước test cuối từ chối chạy nếu các thư viện này khác phiên bản. Chỉ cần đọc dữ liệu/audit thì `pip install -e .` (Pillow, numpy, OpenCV) là đủ.
+
+**Windows:** đặt `PYTHONUTF8=1` trước khi chạy (PowerShell: `$env:PYTHONUTF8=1`) để console in được tiếng Việt và mọi file đọc/ghi dùng UTF-8.
+
+## 2. Dữ liệu PKLot
+
+| | |
+|---|---|
+| Trang chính thức | https://web.inf.ufpr.br/vri/databases/parking-lot-database/ |
+| Archive | https://www.inf.ufpr.br/vri/databases/PKLot.tar.gz — 4.898.276.304 byte (kiểm tra lại ngày 15/11/2026) |
+| Tài liệu | https://www.inf.ufpr.br/lesoliveira/download/pklot-readme.pdf |
+| Giấy phép | CC BY 4.0 — phải trích dẫn Almeida et al. (2015), xem cuối trang |
+
+```bash
+python parking_module.py prepare                 # tải tiếp (resume) bằng curl, giải nén ảnh toàn cảnh + XML, audit
+python parking_module.py prepare --no-download   # archive đã có trong data/raw/
+python parking_module.py audit --root data/raw/PKLot --output outputs/full   # dataset đã giải nén sẵn
+```
+
+Kết quả: `data/raw/PKLot/{PUCPR,UFPR04,UFPR05}/...` và `outputs/full/{valid_samples.jsonl, issues.jsonl, audit_summary.json, provenance.json}`. Chỉ giải nén ảnh toàn cảnh và XML, không lấy `PKLotSegmented`. SHA256 tính sau khi tải là dấu vết local, nhà phát hành không công bố checksum.
+
+**Không cần chia lại dữ liệu.** Split đã khóa nằm trong `data/manifests/pklot_v1/` (chia theo ngày, seed 42):
+
+| Giao thức | Train | Val | Test |
+|---|---:|---:|---:|
+| `within_camera` (PUCPR + UFPR04 + UFPR05) | 1.182 | 270 | 270 |
+| `transfer_ufpr04_to_ufpr05` | 420 | 90 | 90 |
+
+Nếu chạy lại `python parking_module.py splits --manifest outputs/full/valid_samples.jsonl`, lệnh chỉ xác minh split hiện có với audit của bạn và từ chối ghi đè. Chi tiết: [docs/dataset-protocol.md](docs/dataset-protocol.md).
+
+## 3. Checkpoint YOLO11n
+
+Checkpoint COCO gốc của Ultralytics, không fine-tune; chỉ giữ các lớp `car`, `bus`, `truck`.
+
+| | |
+|---|---|
+| URL | https://github.com/ultralytics/assets/releases/download/v8.3.0/yolo11n.pt |
+| SHA256 | `0ebbc80d4a7680d14987a577cd21342b65ecfd94632bd9a8da63ae6417644ee1` |
+| Kích thước | 5.613.764 byte |
+
+```bash
+mkdir -p models
+curl -L -o models/yolo11n.pt https://github.com/ultralytics/assets/releases/download/v8.3.0/yolo11n.pt
+sha256sum models/yolo11n.pt          # Windows: certutil -hashfile models\yolo11n.pt SHA256
+```
+
+URL và SHA256 đã chốt trong `configs/validation_v1.json`; runner từ chối checkpoint có hash khác.
+
+## 4. Lệnh chạy
+
+```bash
+# Kiểm thử (không cần dataset/model/mạng), gồm kiểm tra mã khóa còn khớp
 python -m unittest discover -s tests -v
-python -m parking_occupancy.prepare
+
+# Validation: tìm tham số chỉ trên train/val rồi tạo locked_config.json
+python parking_module.py validate --dataset-root data/raw/PKLot \
+  --manifest-dir data/manifests/pklot_v1/within_camera --plan configs/validation_v1.json \
+  --checkpoint models/yolo11n.pt --output outputs/validation_v1 --device cpu
+
+# Test cuối với cấu hình đã khóa (kiểm tra trước, rồi chạy vào thư mục MỚI)
+python scripts/run_final_test.py --check-only
+python scripts/run_final_test.py --output outputs/locked_test_v1 --device cpu
+
+# Đánh giá một file dự đoán bất kỳ bằng evaluator chung
+python parking_module.py evaluate --help
 ```
 
-Lệnh prepare tải tiếp bằng curl, yêu cầu khoảng 10–15 GB trống; chỉ giải nén ảnh toàn cảnh và XML (không lấy PKLotSegmented), sau đó kiểm tra tất cả ảnh và nhãn. Có thể chạy lại; không chạy đồng thời hai downloader vào cùng archive. Archive chính thức có 4.898.276.304 byte khi kiểm tra ngày 28/10/2026. SHA256 tính sau tải dùng làm dấu vết local, chưa phải xác thực bằng checksum của nhà phát hành.
+Validation đầy đủ trên CPU mất nhiều giờ; smoke-test dùng `--max-train-frames 24 --max-val-frames 3` và một `--output` **khác** (lượt thiếu dữ liệu không tạo khóa). Xem [docs/validation.md](docs/validation.md).
 
-Nếu archive đã tải xong:
+### Test cuối và gói khóa
 
-```bash
-python -m parking_occupancy.prepare --no-download
-```
+Test cuối cần thêm hai model đã huấn luyện trên train ở lượt validation khóa: `outputs/validation_v1/hog_svm.joblib` và `outputs/validation_v1/geometry_references.joblib`. Chúng không nằm trong Git; SHA256 của chúng được ghi trong [`locked_config.json`](reports/validation_v1/locked_config.json). Có hai cách:
 
-Nếu đã giải nén sẵn, trỏ đúng thư mục chứa UFPR04, UFPR05, PUC:
+1. **Dùng gói khóa** `parking-final-test-bundle.zip` (model HOG, tham chiếu hình học, khóa, plan, checkpoint, manifest, mã; không chứa ảnh PKLot). Giải nén vào thư mục gốc repo để các đường dẫn mặc định ở trên khớp, hoặc trên Colab điền `LOCKED_BUNDLE_ZIP`. Người giữ lượt validation tạo gói bằng `python scripts/build_final_test_bundle.py`.
+2. **Chạy lại validation** theo lệnh trên. Lượt mới tạo khóa mới; báo cáo số liệu theo khóa đó.
 
-```bash
-parking-audit --root data/raw/PKLot --output outputs/full
-```
+`run_final_test.py` kiểm tra lần lượt: khóa đầy đủ và được chọn trên val, SHA256 của checkpoint/manifest/model HOG/tham chiếu, mã nguồn engine, phiên bản thư viện, toàn bộ 270 ảnh test. Chỉ khi tất cả khớp mới suy luận. Kết quả ở `outputs/locked_test_v1/`: `tables/comparison.csv`, bảng theo camera/thời tiết, ma trận nhầm lẫn, timing, ảnh đúng/sai/unknown và `evidence_sha256.json`. Lệnh không ghi đè thư mục đã có kết quả.
 
-## Colab / Run All — cách dùng chính
+## 5. Chạy trên Google Colab
 
-1. Push file **`parking_module.py`** ở thư mục gốc lên GitHub public. Đây là file duy nhất chứa mã xử lý và chỉ cần Pillow; không cần push data, outputs hoặc cài package repo trên Colab.
-2. Upload **`notebooks/01_pklot_run_all.ipynb`** lên Colab.
-3. Notebook đã cấu hình `OWNER=tuan314159265`, `REPO=parking-occupancy`, `REF=main`; sửa trong cell đầu nếu dùng repo khác. REF là nhánh thực tế (`main` hoặc `master`), tag hoặc commit SHA. Mặc định module nằm ở gốc repo.
-4. Chọn Run All. Notebook cài Pillow, tải module từ raw.githubusercontent.com, import và gọi `parking.ensure_dataset(...)`, rồi đọc một frame hợp lệ. Lần Run All sau tải lại đúng REF cấu hình.
+1. Mở [notebook trên Colab](https://colab.research.google.com/github/tuan314159265/parking-occupancy/blob/main/notebooks/01_pklot_run_all.ipynb). Chọn *Runtime → Change runtime type → T4 GPU* (CPU cũng chạy được nhưng chậm).
+2. Cell cấu hình mục 2 (mặc định đã đúng cho repo này):
+   - `REF = "main"`. Để tái lập chính xác bản nộp, dùng tag hoặc commit SHA của bản cuối.
+   - `USE_GOOGLE_DRIVE`: `False` (mặc định) thì dữ liệu chỉ nằm trong runtime và tải lại mỗi phiên; `True` để lưu dataset, audit và kết quả tại `MyDrive/parking-occupancy/` và dùng lại cho các lần sau.
+   - `SHARED_DATASET_DIR`: điền nếu đã có PKLot giải nén trên Drive (thư mục chứa UFPR04/UFPR05/PUCPR). Để trống thì notebook tự tải archive 4,9 GB.
+   - `RUN_VALIDATION_SEARCH=False`, `RUN_FINAL_TEST=False`: Run All chỉ đọc lại kết quả và khóa có sẵn, không tự chạy test.
+3. *Runtime → Run all*. Khi Colab hỏi quyền Drive, chọn **tất cả** quyền.
+4. Chạy test thật: điền `LOCKED_BUNDLE_ZIP`, đặt `RUN_FINAL_TEST=True`, chạy lại từ mục 6.3. Lưu ý: test chỉ chạy khi phiên bản torch/numpy/opencv… trên runtime khớp khóa; nếu Colab cài sẵn bản khác, cài theo `requirements.txt` rồi *Restart runtime*.
 
-Notebook lưu URL, REF và SHA256 module vào `module_source.json` để ghi nhận mã đã chạy. Dùng commit SHA nếu cần tái lập chính xác. Repo private chưa được hỗ trợ trong notebook này.
+Notebook không nhúng mã xử lý: cell mục 2 tải `parking_module.py` từ GitHub theo `OWNER/REPO/REF` và ghi URL, REF và SHA256 vào `module_source.json`. Mục 3.2 tải manifest đã khóa và kiểm tra checksum. Xử lý lỗi `mount failed` / `credential propagation was unsuccessful`: chạy lại cell mount, cấp đủ quyền; nếu vẫn lỗi, *Runtime → Disconnect and delete runtime* rồi Run All (xem [googlecolab/colabtools#6089](https://github.com/googlecolab/colabtools/issues/6089)).
 
-Có thể dùng module độc lập ở local:
+## 6. Tính toàn vẹn của bản khóa
 
-```bash
-python -m pip install 'Pillow>=10,<13'
-python parking_module.py prepare
-python parking_module.py audit --root data/raw/PKLot --output outputs/full
-```
+- `locked_config.json` băm mã nguồn 27 hàm suy luận/đánh giá trong `parking_module.py` (`engine_sha256`). Sửa bất kỳ hàm nào trong số đó, kể cả định dạng, sẽ làm test cuối bị từ chối. `tests/test_locked_release.py` phát hiện điều này ngay khi chạy unit test.
+- Không chọn tham số, ngưỡng hay model trên test. Mọi cấu hình đã thử (kể cả không cải thiện) đều được lưu trong `reports/validation_v1/`.
+- **Lịch sử test:** notebook cũ (commit `293893d`) từng in output trên 270 ảnh test với cấu hình trước đó. Lượt validation mới đã chốt plan trước khi xem lại và không dùng điểm test, nhưng test v1 **không** phải holdout chưa từng quan sát. Báo cáo cần nêu rõ điều này.
+- Giao thức `transfer_ufpr04_to_ufpr05` đã có split nhưng chưa chạy validation/test mới.
+- Timing đo một lượt trên CPU local sau warm-up; không so trực tiếp với GPU Colab.
 
-Không cần clone hay upload toàn bộ repository lên Colab. Notebook mặc định mount Google Drive của bạn và lưu archive, ảnh/XML cùng kết quả tại `MyDrive/parking-occupancy/`. Lần sau dùng lại dataset và manifest tương thích, bỏ qua tải/giải nén/audit toàn bộ. Nếu chưa có cache phù hợp, chỉ audit một lần; không cần provenance.json để nhận dataset đã giải nén. Đặt `USE_GOOGLE_DRIVE=False` nếu chỉ muốn dùng bộ nhớ tạm Colab. Repo GitHub: https://github.com/tuan314159265/parking-occupancy. Notebook đã điền sẵn tài khoản, tên repo và nhánh main. Notebook đã chạy trọn vẹn (Run All) trên Colab với giao thức within_camera; giao thức chuyển camera chưa chạy.
+## Tài liệu chi tiết
 
-## Cấu trúc
-
-- `data/raw/`: archive, ảnh toàn cảnh, XML; không commit dữ liệu lớn.
-- `configs/default.json`: cấu hình và quy ước mặc định để các thành viên tham khảo. CLI hiện nhận root/output/seed trực tiếp.
-- `parking_module.py`: toàn bộ contracts, loader/audit, tải/giải nén và metrics trong một file độc lập.
-- `src/parking_occupancy/`: các đường import tương thích cho CLI/package local, dùng chung mã từ module gốc.
-- `outputs/full/`: valid_samples.jsonl, issues.jsonl, audit_summary.json, provenance.json.
-- `outputs/partial/`: nếu có, chỉ kiểm tra phần archive đã tải; không đại diện toàn bộ PKLot.
-- `docs/interfaces.md`: giao diện dữ liệu, hình học, detector, đánh giá đã chốt ở mức v0.1.
-- `report/main.tex`: khung báo cáo tiếng Việt; biên dịch `pdflatex main.tex` từ thư mục report, cần TeX Live với hỗ trợ tiếng Việt.
-
-Manifest JSONL có một dòng/frame, giữ toàn bộ polygon, nhãn và metadata; rejected frame không nằm trong danh sách hợp lệ. issues ghi ảnh thiếu/XML thiếu, lỗi giải mã, XML lỗi, nhãn ngoài 0/1, trùng id, contour không hợp lệ. Audit không tự sửa hay suy đoán nhãn. Nên chỉ chạy audit trên full-frame root để tránh coi ảnh crop là orphan.
-
-Chia train/val/test theo ngày trên tất cả camera; dùng seed 42. Chi tiết và giới hạn trong `docs/interfaces.md`.
+- [docs/introduction-and-data.md](docs/introduction-and-data.md): bài toán, PKLot, kiểm tra chất lượng dữ liệu
+- [docs/dataset-protocol.md](docs/dataset-protocol.md): quy tắc chia theo ngày, ngân sách, giao thức chuyển camera
+- [docs/interfaces.md](docs/interfaces.md): định dạng Frame/ParkingSpace/VehicleDetection, hệ tọa độ
+- [docs/pipeline-integration.md](docs/pipeline-integration.md): pipeline hình học → ROI/tile → YOLO → ghép xe–ô
+- [docs/evaluation.md](docs/evaluation.md): công thức chỉ số, xử lý unknown, schema đầu ra
+- [docs/validation.md](docs/validation.md): dải tìm kiếm, đối chứng pixel, cache, khóa
+- [docs/task-status.md](docs/task-status.md): nhật ký bàn giao theo task
 
 ## Nguồn và trích dẫn
 
-- PKLot: https://web.inf.ufpr.br/vri/databases/parking-lot-database/
-- Archive: https://www.inf.ufpr.br/vri/databases/PKLot.tar.gz
-- Tài liệu: https://www.inf.ufpr.br/lesoliveira/download/pklot-readme.pdf
-- Almeida et al., *PKLot – A robust dataset for parking lot classification*, Expert Systems with Applications 42(11):4937–4949, 2015. Trang hiện tại công bố CC BY 4.0; giữ trích dẫn khi sử dụng.
-- CNRPark-EXT: https://cnrpark.it/ — nguồn tham khảo giai đoạn sau; chưa tải và chưa triển khai loader trong phạm vi hai đầu việc hiện tại.
-
-Trạng thái bàn giao và các bước chưa xác minh: `docs/task-status.md`. Phiên tải đang chạy ghi tiến độ vào `outputs/pipeline_status.json`; khi đủ archive, tiến trình chờ tự chạy audit đầy đủ.
-
-## Nơi lưu dữ liệu
-
-- GitHub: module Python, notebook, cấu hình, tài liệu và tests. Không push archive hoặc ảnh/XML dataset; `.gitignore` đã loại `data/raw/` và kết quả `outputs/`.
-- Local: bản tải hiện tại và ảnh/XML sau giải nén ở `data/raw/`, dùng chạy trên máy này. Không tự đồng bộ lên Drive.
-- Colab: notebook mount Drive của tài khoản bạn chọn, lưu tại `MyDrive/parking-occupancy/data/raw/`; manifest và thống kê tại `MyDrive/parking-occupancy/outputs/full/`.
-
-Bạn có thể tự upload archive local lên đúng thư mục Drive để Colab tải tiếp, hoặc upload archive hoàn chỉnh để Colab chỉ giải nén. Hai môi trường dùng bản dữ liệu riêng nếu không chủ động chuyển file.
-
-[Mở notebook trên Colab](https://colab.research.google.com/github/tuan314159265/parking-occupancy/blob/main/notebooks/01_pklot_run_all.ipynb).
-
-## Nếu Colab báo `mount failed`
-
-Notebook kiểm tra Drive đã mount trước khi kết nối. Nếu kết nối lỗi sẽ thử lại một lần bằng force_remount; nếu vẫn lỗi sẽ dừng trước khi tải dữ liệu và hiện hướng dẫn. Đây là bước xác thực/kết nối của Colab, sửa notebook không bảo đảm khắc phục sự cố tài khoản hoặc dịch vụ.
-
-Dùng runtime Google Colab và cấp quyền Drive khi hộp thoại hiện ra. Nếu lỗi tiếp diễn, chọn Runtime → Disconnect and delete runtime, kết nối lại và Run All (dữ liệu tạm trong phiên bị xóa, dữ liệu trên Drive được giữ). Local runtime không hỗ trợ drive.mount; đặt USE_GOOGLE_DRIVE=False để dùng ổ đĩa local. Khi tắt Drive trên Colab, dữ liệu chỉ lưu tạm trong runtime.
-
-Mỗi lần chạy cell tải/import module, notebook gửi yêu cầu tải mới và in SHA256 mã đã tải. Cập nhật parking_module.py trên nhánh main chỉ cần chạy lại cell đó rồi các cell xử lý; cập nhật .ipynb cần mở lại notebook từ GitHub.
-
-Nếu thấy `MessageError: credential propagation was unsuccessful`, Colab chưa nhận được credentials. Chạy lại cell mount và kiểm tra đã chọn đủ các quyền được yêu cầu trong cửa sổ xác thực trước khi Continue. Nhóm Colab xác nhận thiếu một quyền cũng có thể gây lỗi này: https://github.com/googlecolab/colabtools/issues/6089. Notebook nhận diện lỗi và dừng với hướng dẫn; không tự cấp quyền hay chuyển dữ liệu sang bộ nhớ tạm.
-
-## Dùng lại dữ liệu và chia sẻ cho nhóm
-
-Notebook phiên bản `dataset-reuse-v1` tự quyết định bước cần chạy:
-
-- Có thư mục dataset chứa XML: bỏ qua tải và giải nén, kể cả không có provenance.json.
-- Có audit/manifest tương thích với seed và phiên bản loader: dùng lại, chỉ đối chiếu một frame với ảnh/XML thật; không quét toàn bộ dataset.
-- Chưa có cache, cache lỗi hoặc FORCE_AUDIT=True: audit dữ liệu có sẵn một lần và ghi kết quả cá nhân.
-- Chưa có dataset riêng: tải tiếp archive nếu thiếu; archive đủ kích thước thì bỏ qua curl. Bước giải nén bị gián đoạn do phiên bản mới ghi nhận sẽ được làm lại.
-
-Cache nhanh giả định dataset không thay đổi. Nếu thêm/xóa/sửa dữ liệu, đặt FORCE_AUDIT=True. Kiểm tra nhanh một frame không xác nhận mọi file còn nguyên. XML tồn tại cũng không chứng minh đã đủ toàn bộ PKLot; đối chiếu số frame trong thống kê nếu cần xác nhận phạm vi dữ liệu. Audit từ phiên bản cũ chưa có audit_version sẽ được chạy lại một lần để tạo cache mới.
-
-Để dùng dữ liệu chung chỉ đọc, từng thành viên thêm shortcut thư mục chung vào MyDrive rồi chỉnh cell cấu hình:
-
-```python
-DRIVE_PROJECT_DIR = "parking-occupancy"  # Thư mục riêng của thành viên, không phải shortcut chung.
-SHARED_DATASET_DIR = "/content/drive/MyDrive/PKLot-shared/data/raw/PKLot"
-SHARED_AUDIT_DIR = "/content/drive/MyDrive/PKLot-shared/outputs/full"  # Tùy chọn.
-FORCE_AUDIT = False
-```
-
-SHARED_DATASET_DIR phải chứa các camera (UFPR04, UFPR05, PUCPR/PUC), không trỏ vào archive hoặc bộ crop PKLotSegmented. Mã chỉ đọc dataset và audit chung; manifest được sao chép về thư mục kết quả cá nhân. Nếu đường dẫn chung sai, chương trình dừng thay vì tải/giải nén vào thư mục chung. Không có audit chung thì để SHARED_AUDIT_DIR trống; mỗi người chỉ audit một lần, các lần sau dùng cache cá nhân.
-
-Kết nối Drive, cài Pillow và tải/import module vẫn chạy khi Run All; chỉ các bước dữ liệu tốn thời gian được bỏ qua. Các biến REUSE_EXTRACTED/provenance.json của notebook cũ không còn là điều kiện bắt buộc.
-
-## Tập dữ liệu đã khóa cho các phương pháp
-
-Task 3 đã có bộ `pklot_v1`: **1.182/270/270** frame train/validation/test cho thí nghiệm chính và **420/90/90** cho chuyển góc nhìn UFPR04 → UFPR05. Notebook mục **3.2** tự tải cùng bộ manifest/JSON vùng ô từ GitHub và kiểm tra checksum; không chia lại ngẫu nhiên theo từng người. Cấu hình tại `configs/pklot_v1.json`, metadata nhẹ tại `data/manifests/pklot_v1/`; ảnh/XML vẫn nằm ngoài Git.
-
-Xem [giao thức dữ liệu](docs/dataset-protocol.md) để dùng manifest, đọc layout theo geometry_id và tái lập split. Loader v2 hỗ trợ Point/point, lấy ngày từ tên ảnh và giữ ngày thư mục để truy vết. Cache audit v1 cần chạy lại một lần sau khi nâng module để cập nhật metadata; không tải lại ảnh.
-
-## Bộ đánh giá dùng chung
-
-Notebook mục **6.1** đã có evaluator cho các phương pháp: `evaluate_occupancy`, `FrameTimer`, `export_evaluation` và `evaluator_self_check`. Ghép dự đoán theo ảnh/ô, báo coverage, tính unknown là sai trong accuracy tổng, có F1/precision/recall, ma trận nhầm lẫn, tỉ lệ báo trống sai, MAE đếm và thời gian trên ảnh gốc. Xuất JSON và CSV theo nhóm camera/thời tiết. Xem [công thức, schema và ví dụ tính tay](docs/evaluation.md).
-
-Chạy `python parking_module.py evaluate --help` để xem CLI. Cell self-check chỉ kiểm chứng trên dữ liệu nhân tạo; chưa có dự đoán thật thì không tạo kết quả thực nghiệm.
-
-## Phần mở đầu và dữ liệu của báo cáo
-
-Nội dung task 15 có ở [bản Markdown](docs/introduction-and-data.md), notebook mục **1** và **3**, cùng hai phần LaTeX trong `report/sections/`. Số liệu lấy từ audit và split đã khóa của pklot_v1; nguồn PKLot được trích dẫn riêng. Biên dịch bản nháp từ repo root:
-
-```bash
-mkdir -p outputs/report
-cd report
-pdflatex -interaction=nonstopmode -halt-on-error -output-directory=../outputs/report main.tex
-pdflatex -interaction=nonstopmode -halt-on-error -output-directory=../outputs/report main.tex
-```
-
-PDF ở `outputs/report/main.pdf`, nằm ngoài Git. Báo cáo hiện chưa có nội dung phương pháp/kết quả đầy đủ.
-
-## Pipeline tích hợp và trực quan hóa
-
-Notebook mục **5** ghép toàn bộ các phần: đọc ảnh → Canny/Hough (4.2) và cờ hình học yếu so với tham chiếu train → ROI/tile (4.3) → HOG/SVM (4.1) hoặc YOLO11n toàn ảnh/tile (4.4/4.5) → quy đổi box về ảnh gốc → ghép xe–ô (4.6). Mỗi ảnh có hình 6 panel và đầu ra CSV/JSON. Khi hình học yếu, pipeline thông báo và trả *unknown*, không tự coi ô là trống. Luồng demo cũ được giữ để tham khảo; luồng validation chính thức hiện ở 6.2 dùng plan giới hạn và đối chứng pixel. Mục 6.3 chỉ chạy test khi RUN_FINAL_TEST=True và khóa đã được kiểm tra; mục 7 tổng hợp số liệu sẵn có. Chi tiết, review và kiểm chứng: [docs/pipeline-integration.md](docs/pipeline-integration.md).
-
-## Chạy notebook hoàn chỉnh trên Colab
-
-Notebook **không chứa mã của module**: cell ở mục 2 tải `parking_module.py`, và mục 3.2 tải manifest từ GitHub theo `OWNER/REPO/REF`. Vì vậy phải push code lên GitHub trước, rồi mới mở notebook.
-
-1. **Push** `main` lên `tuan314159265/parking-occupancy`, cần quyền ghi repo. Nếu push lên fork, sửa `OWNER` ở cell cấu hình mục 2.
-2. **Mở notebook:** Colab → File → Open notebook → tab GitHub → `tuan314159265/parking-occupancy` → `notebooks/01_pklot_run_all.ipynb`, hoặc bấm badge ở đầu notebook. Upload file `.ipynb` cũng chạy được, nhưng mở từ GitHub thì luôn đúng phiên bản.
-3. **Runtime → Change runtime type → GPU (T4)** để YOLO nhanh hơn. CPU vẫn chạy được nhưng lâu.
-4. **Cell cấu hình mục 2:**
-   - `REF = "main"`, hoặc commit SHA vừa push cho lần chạy chính thức.
-   - `PROTOCOL = "within_camera"`.
-   - Nếu nhóm đã có PKLot trên Drive, điền `SHARED_DATASET_DIR` (và `SHARED_AUDIT_DIR` nếu có). Nếu để trống, lần đầu notebook tự tải archive 4,9 GB và cần khoảng 10–15 GB trống trên Drive.
-5. **Runtime → Run all**, chọn tài khoản và **tất cả quyền** khi Colab hỏi quyền Drive.
-6. **Chế độ mặc định:** VALIDATION_ONLY_MODE=True, các demo nặng ở 4–5 được bỏ qua; mục 6.2 tự chạy HOG, YOLO toàn ảnh, hybrid và đối chứng toàn ảnh khớp pixel. CPU có thể mất nhiều thời gian; xem tiến độ theo số ảnh. RUN_FINAL_TEST=False nên Run All không tự chạy test. Để smoke-test, dùng CLI với giới hạn frame vào thư mục riêng; kết quả thiếu dữ liệu không tạo khóa test.
-7. **Kết quả** đồng bộ tới `MyDrive/parking-occupancy/outputs/full/<PROTOCOL>/validation_v1/`. Bảng ở comparison.csv, khóa ở locked_config.json. Dataset và audit trên Drive được dùng lại. Feature/detection cache lớn chỉ giữ local; runtime bị xóa giữa lượt chạy có thể cần trích feature/inference lại. Xem docs/validation.md về giới hạn cache.
-
-
-## Validation và khóa tham số (task 12)
-
-Luồng mới dùng `configs/validation_v1.json`: 9 cấu hình HOG/SVM, 144 tổ hợp padding/overlap/ngưỡng chung cho YOLO toàn ảnh, hybrid và toàn ảnh có pixel tensor khớp tiling. Tất cả cấu hình không cải thiện đều được lưu. Chạy `python parking_module.py validate --help` hoặc notebook mục **6.2**, mặc định `VALIDATION_ONLY_MODE=True` để bỏ các demo nặng bị trùng. `RUN_FINAL_TEST=False` tránh chạy test tự động.
-
-Xem [giao thức validation, cache và khóa trước test](docs/validation.md). Đầu ra chính là comparison.csv, detector_search.json, hog_search.json và locked_config.json trong outputs/validation_v1 (CLI) hoặc OUTPUT_DIR/PROTOCOL/validation_v1 (Colab). Không coi số liệu validation đã dùng chọn tham số là kết quả test độc lập.
-
-Kết quả validation CPU thực tế đã được lưu tại [reports/validation_v1](reports/validation_v1/README.md), gồm bảng, biểu đồ, toàn bộ 153 cấu hình và khóa. Đây là giao thức within_camera; chưa chạy lại test hoặc validation chuyển camera. Lịch sử test cũ được ghi rõ trong báo cáo. Cache/source/model được kiểm tra khi dùng lại lượt đã hoàn tất.
-
-## Chạy validation và test trong cùng một notebook
-
-Dùng `notebooks/01_pklot_run_all.ipynb` cho toàn bộ luồng. Có kết quả validation rồi giữ `RUN_VALIDATION_SEARCH=False`; mục 6.2 đọc lại model/khóa, mục 6.3a kiểm tra và mục 6.3b chỉ chạy test khi `RUN_FINAL_TEST=True`. Mục 6.3c–e xuất bảng, ảnh đúng/sai/unknown và checksum; mục 7 hiển thị ngay trong notebook. Giữ cờ test False để đọc kết quả đã có mà không inference lại.
-
-Code, split và plan local/bundle được ưu tiên dùng lại. Runtime Colab mới có thể khôi phục gói `parking-final-test-bundle.zip` bằng `LOCKED_BUNDLE_ZIP`, còn dataset ảnh dùng đường dẫn riêng. Gói chứa model/checkpoint/metadata, không chứa PKLot và không thay thế yêu cầu phiên bản thư viện khớp khóa. Notebook 02 chỉ còn là bản thực hành tùy chọn. Hướng dẫn từng bước đã có ngay trong notebook chính và bộ ghi chú Obsidian của dự án.
+- P. R. L. de Almeida, L. S. Oliveira, A. S. Britto Jr., E. J. Silva Jr., A. L. Koerich. *PKLot – A robust dataset for parking lot classification*. Expert Systems with Applications 42(11):4937–4949, 2015. Dữ liệu theo CC BY 4.0.
+- Ultralytics YOLO11 (AGPL-3.0): https://github.com/ultralytics/ultralytics. Checkpoint `yolo11n.pt` từ https://github.com/ultralytics/assets/releases/tag/v8.3.0.

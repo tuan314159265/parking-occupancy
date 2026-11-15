@@ -81,7 +81,7 @@ class HybridNotebookTests(unittest.TestCase):
         geometry_id, _ = parking._geometry_record(asdict(self.frame))
         self.record = dict(sample_id=self.frame.sample_id, xml_path=self.frame.xml_path,
                            geometry_id=geometry_id, labels={'1': 1})
-        notebook = json.loads((REPO / 'notebooks/01_pklot_run_all.ipynb').read_text())
+        notebook = json.loads((REPO / 'notebooks/01_pklot_run_all.ipynb').read_text(encoding="utf-8"))
         self.cells = {c.get('id'): ''.join(c['source']) for c in notebook['cells']}
         self.addCleanup(plt.close, 'all')
 
@@ -110,7 +110,7 @@ class HybridNotebookTests(unittest.TestCase):
         self.assertTrue(metadata['tiling']['all_context_covered'])
         self.assertEqual(metadata['tiling']['fallback_reason'], 'context_exceeds_max_overlap')
         self.assertEqual(result['HYBRID_TIMINGS'][0]['inference_calls'], 1)
-        exported = [json.loads(line) for line in (result['HYBRID_OUTPUT_DIR'] / 'val_detections.jsonl').read_text().splitlines()]
+        exported = [json.loads(line) for line in (result['HYBRID_OUTPUT_DIR'] / 'val_detections.jsonl').read_text(encoding="utf-8").splitlines()]
         self.assertEqual(exported[0]['metadata'], metadata)
         self.assertEqual(exported[0]['detections'], [])
 

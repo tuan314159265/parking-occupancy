@@ -89,7 +89,7 @@ class FinalTestWorkflowTests(unittest.TestCase):
 
     def test_missing_prediction_rejected(self):
         path = self.out / "hog_svm/aligned_predictions.jsonl"
-        path.write_text("\n".join(path.read_text().splitlines()[:-1]) + "\n")
+        path.write_text("\n".join(path.read_text(encoding="utf-8").splitlines()[:-1]) + "\n")
         with self.assertRaisesRegex(ValueError, "slot predictions"):
             flow.verify_saved_test(self.out, self.md, self.val)
 
