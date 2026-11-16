@@ -150,6 +150,7 @@ Validation đầy đủ trên CPU mất nhiều giờ; smoke-test dùng `--max-t
 Test cuối cần thêm hai model đã huấn luyện trên train ở lượt validation khóa: `outputs/validation_v1/hog_svm.joblib` và `outputs/validation_v1/geometry_references.joblib`. Chúng không nằm trong Git; SHA256 của chúng được ghi trong [`locked_config.json`](reports/validation_v1/locked_config.json). Có hai cách:
 
 1. **Dùng gói khóa** `parking-final-test-bundle.zip` (model HOG, tham chiếu hình học, khóa, plan, checkpoint, manifest, mã; không chứa ảnh PKLot). Giải nén vào thư mục gốc repo để các đường dẫn mặc định ở trên khớp, hoặc trên Colab điền `LOCKED_BUNDLE_ZIP`. Người giữ lượt validation tạo gói bằng `python scripts/build_final_test_bundle.py`.
+   Tải: https://github.com/tuan314159265/parking-occupancy/releases/download/v1.0-final/parking-final-test-bundle.zip
 2. **Chạy lại validation** theo lệnh trên. Lượt mới tạo khóa mới; báo cáo số liệu theo khóa đó.
 
 `run_final_test.py` kiểm tra lần lượt: khóa đầy đủ và được chọn trên val, SHA256 của checkpoint/manifest/model HOG/tham chiếu, mã nguồn engine, phiên bản thư viện, toàn bộ 270 ảnh test. Chỉ khi tất cả khớp mới suy luận. Kết quả ở `outputs/locked_test_v1/`: `tables/comparison.csv`, bảng theo camera/thời tiết, ma trận nhầm lẫn, timing, ảnh đúng/sai/unknown và `evidence_sha256.json`. Lệnh không ghi đè thư mục đã có kết quả.
