@@ -1,0 +1,62 @@
+{
+  "status": "complete",
+  "device": "cpu",
+  "inputs": {
+    "protocol": "within_camera",
+    "test_frames": 270,
+    "test_slots": 15120,
+    "selected_on": "val",
+    "selected": {
+      "confidence": 0.15,
+      "highres_shapes": {
+        "PUCPR_ed651d8e7b980222": [
+          640,
+          1280
+        ],
+        "UFPR04_38ea1f973c7f01a2": [
+          1280,
+          1280
+        ],
+        "UFPR04_d9e74d220b252cea": [
+          1280,
+          1280
+        ],
+        "UFPR05_d428ebf84a8a4208": [
+          1280,
+          1280
+        ]
+      },
+      "hog_C": 0.01,
+      "hog_threshold": -0.25,
+      "occupancy_config": {
+        "ambiguity_margin": 0.0,
+        "lower_fraction": 0.67,
+        "min_overlap": 0.2,
+        "min_score": 0.15,
+        "nms_iou": 0.5
+      },
+      "tiling": {
+        "grid": [
+          2,
+          2
+        ],
+        "max_overlap": 0.6,
+        "min_tile_size": 256,
+        "output_size": null,
+        "overlap": 0.2,
+        "padding": 16
+      }
+    },
+    "validation_lock_sha256": "931ebc8a916c7e00fe6c5c1206a6bb4e3e5574769a8ba0f2859e3558ad2b972a",
+    "dataset_checked": true,
+    "test_inference_performed": false
+  },
+  "parameter_selection": false,
+  "legacy_test_previously_observed": true,
+  "methods": [
+    "hog_svm",
+    "yolo_fullframe",
+    "yolo_hybrid",
+    "yolo_fullframe_highres"
+  ]
+}

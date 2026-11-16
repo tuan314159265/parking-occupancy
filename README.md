@@ -27,6 +27,21 @@ Giao thức `within_camera`, 270 ảnh validation (15.120 ô), CPU. Đây là s�
 
 Accuracy tính *unknown* là sai; coverage là tỉ lệ ô có dự đoán. Công thức: [docs/evaluation.md](docs/evaluation.md).
 
+## Kết quả test cuối (đã hoàn tất)
+
+Task 13 đã hoàn tất ở lượt ngày **11/11/2026**: cùng 270 ảnh / 15.120 ô cho cả bốn phương pháp, cấu hình chọn trên validation đã khóa, CPU. Bộ bằng chứng local được tìm lại và xác minh ngày 16/11/2026; không chạy lại test để công bố bảng này.
+
+| Phương pháp | F1 test | Accuracy | Coverage | MAE ô trống | ms/ảnh CPU |
+|---|---:|---:|---:|---:|---:|
+| HOG + SVM | 0.9654 | 0.9126 | 0.9353 | 4.681 | 167.8 |
+| YOLO full 640 | 0.3679 | 0.6767 | 0.9015 | 15.807 | 165.3 |
+| Hybrid 640 | 0.6517 | 0.7583 | 0.9026 | 11.400 | 386.5 |
+| YOLO full pixel-matched | 0.6249 | 0.7487 | 0.8955 | 11.563 | 377.9 |
+
+**Dùng cho task 17–18:** [báo cáo test và ảnh minh họa](reports/final_test_v1/README.md), [bảng tổng](reports/final_test_v1/tables/comparison.csv), [theo camera](reports/final_test_v1/tables/by_camera.csv), [theo thời tiết](reports/final_test_v1/tables/by_weather.csv), [timing từng giai đoạn](reports/final_test_v1/tables/timings_per_frame.csv). Thư mục báo cáo giữ đủ dự đoán, 88 ảnh minh họa, metadata và checksum.
+
+Đã xác minh đủ bốn phương pháp và metrics tính lại khớp dự đoán/timing; 127 file nguồn khớp manifest gốc. Test có lịch sử đã được quan sát ở notebook cũ, nên không gọi đây là blind holdout chưa từng quan sát. Các thời gian là CPU, không so trực tiếp GPU Colab.
+
 ## Cấu trúc repository
 
 ```
@@ -39,6 +54,7 @@ scripts/export_validation_report.py Xuất báo cáo nhẹ vào reports/ sau m�
 configs/                   pklot_v1.json (split), validation_v1.json (plan tìm kiếm + checkpoint), default.json
 data/manifests/pklot_v1/   Split train/val/test và polygon ô đỗ đã khóa (có SHA256 trong split_lock.json)
 reports/validation_v1/     Kết quả validation, plan, khóa locked_config.json, hash
+reports/final_test_v1/     Test cuối: bảng, dự đoán, timing, 88 ảnh minh họa và hash
 src/parking_occupancy/     Lớp tương thích cho `pip install -e .` (chuyển tiếp tới parking_module)
 tests/                     136 unit test (không cần dataset, model hay mạng)
 docs/                      Giao thức dữ liệu, đánh giá, validation, pipeline, giao diện, nhật ký bàn giao

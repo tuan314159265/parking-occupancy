@@ -7,3 +7,7 @@ reports/**/*.csv text eol=lf
 reports/**/*.md text eol=lf
 reports/**/*.png binary
 configs/validation_v1.json text eol=lf
+
+reports/**/*.jsonl text eol=lf
+
+reports/**/*.jpg binary

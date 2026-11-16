@@ -1,0 +1,1663 @@
+{
+  "rule": "First sample_id in sorted order per method/camera/weather/category; no parameter changes",
+  "categories": [
+    {
+      "method": "hog_svm",
+      "camera": "PUCPR",
+      "weather": "overcast",
+      "category": "correct",
+      "available_frames": 15,
+      "selected_frames": 1
+    },
+    {
+      "method": "hog_svm",
+      "camera": "PUCPR",
+      "weather": "overcast",
+      "category": "error",
+      "available_frames": 7,
+      "selected_frames": 1
+    },
+    {
+      "method": "hog_svm",
+      "camera": "PUCPR",
+      "weather": "overcast",
+      "category": "unknown_only",
+      "available_frames": 8,
+      "selected_frames": 1
+    },
+    {
+      "method": "hog_svm",
+      "camera": "PUCPR",
+      "weather": "rainy",
+      "category": "correct",
+      "available_frames": 16,
+      "selected_frames": 1
+    },
+    {
+      "method": "hog_svm",
+      "camera": "PUCPR",
+      "weather": "rainy",
+      "category": "error",
+      "available_frames": 12,
+      "selected_frames": 1
+    },
+    {
+      "method": "hog_svm",
+      "camera": "PUCPR",
+      "weather": "rainy",
+      "category": "unknown_only",
+      "available_frames": 2,
+      "selected_frames": 1
+    },
+    {
+      "method": "hog_svm",
+      "camera": "PUCPR",
+      "weather": "sunny",
+      "category": "correct",
+      "available_frames": 6,
+      "selected_frames": 1
+    },
+    {
+      "method": "hog_svm",
+      "camera": "PUCPR",
+      "weather": "sunny",
+      "category": "error",
+      "available_frames": 15,
+      "selected_frames": 1
+    },
+    {
+      "method": "hog_svm",
+      "camera": "PUCPR",
+      "weather": "sunny",
+      "category": "unknown_only",
+      "available_frames": 9,
+      "selected_frames": 1
+    },
+    {
+      "method": "hog_svm",
+      "camera": "UFPR04",
+      "weather": "overcast",
+      "category": "correct",
+      "available_frames": 5,
+      "selected_frames": 1
+    },
+    {
+      "method": "hog_svm",
+      "camera": "UFPR04",
+      "weather": "overcast",
+      "category": "error",
+      "available_frames": 9,
+      "selected_frames": 1
+    },
+    {
+      "method": "hog_svm",
+      "camera": "UFPR04",
+      "weather": "overcast",
+      "category": "unknown_only",
+      "available_frames": 16,
+      "selected_frames": 1
+    },
+    {
+      "method": "hog_svm",
+      "camera": "UFPR04",
+      "weather": "rainy",
+      "category": "correct",
+      "available_frames": 13,
+      "selected_frames": 1
+    },
+    {
+      "method": "hog_svm",
+      "camera": "UFPR04",
+      "weather": "rainy",
+      "category": "error",
+      "available_frames": 4,
+      "selected_frames": 1
+    },
+    {
+      "method": "hog_svm",
+      "camera": "UFPR04",
+      "weather": "rainy",
+      "category": "unknown_only",
+      "available_frames": 13,
+      "selected_frames": 1
+    },
+    {
+      "method": "hog_svm",
+      "camera": "UFPR04",
+      "weather": "sunny",
+      "category": "correct",
+      "available_frames": 3,
+      "selected_frames": 1
+    },
+    {
+      "method": "hog_svm",
+      "camera": "UFPR04",
+      "weather": "sunny",
+      "category": "error",
+      "available_frames": 18,
+      "selected_frames": 1
+    },
+    {
+      "method": "hog_svm",
+      "camera": "UFPR04",
+      "weather": "sunny",
+      "category": "unknown_only",
+      "available_frames": 9,
+      "selected_frames": 1
+    },
+    {
+      "method": "hog_svm",
+      "camera": "UFPR05",
+      "weather": "overcast",
+      "category": "correct",
+      "available_frames": 9,
+      "selected_frames": 1
+    },
+    {
+      "method": "hog_svm",
+      "camera": "UFPR05",
+      "weather": "overcast",
+      "category": "error",
+      "available_frames": 21,
+      "selected_frames": 1
+    },
+    {
+      "method": "hog_svm",
+      "camera": "UFPR05",
+      "weather": "overcast",
+      "category": "unknown_only",
+      "available_frames": 0,
+      "selected_frames": 0
+    },
+    {
+      "method": "hog_svm",
+      "camera": "UFPR05",
+      "weather": "rainy",
+      "category": "correct",
+      "available_frames": 5,
+      "selected_frames": 1
+    },
+    {
+      "method": "hog_svm",
+      "camera": "UFPR05",
+      "weather": "rainy",
+      "category": "error",
+      "available_frames": 25,
+      "selected_frames": 1
+    },
+    {
+      "method": "hog_svm",
+      "camera": "UFPR05",
+      "weather": "rainy",
+      "category": "unknown_only",
+      "available_frames": 0,
+      "selected_frames": 0
+    },
+    {
+      "method": "hog_svm",
+      "camera": "UFPR05",
+      "weather": "sunny",
+      "category": "correct",
+      "available_frames": 3,
+      "selected_frames": 1
+    },
+    {
+      "method": "hog_svm",
+      "camera": "UFPR05",
+      "weather": "sunny",
+      "category": "error",
+      "available_frames": 23,
+      "selected_frames": 1
+    },
+    {
+      "method": "hog_svm",
+      "camera": "UFPR05",
+      "weather": "sunny",
+      "category": "unknown_only",
+      "available_frames": 4,
+      "selected_frames": 1
+    },
+    {
+      "method": "yolo_fullframe",
+      "camera": "PUCPR",
+      "weather": "overcast",
+      "category": "correct",
+      "available_frames": 21,
+      "selected_frames": 1
+    },
+    {
+      "method": "yolo_fullframe",
+      "camera": "PUCPR",
+      "weather": "overcast",
+      "category": "error",
+      "available_frames": 0,
+      "selected_frames": 0
+    },
+    {
+      "method": "yolo_fullframe",
+      "camera": "PUCPR",
+      "weather": "overcast",
+      "category": "unknown_only",
+      "available_frames": 9,
+      "selected_frames": 1
+    },
+    {
+      "method": "yolo_fullframe",
+      "camera": "PUCPR",
+      "weather": "rainy",
+      "category": "correct",
+      "available_frames": 0,
+      "selected_frames": 0
+    },
+    {
+      "method": "yolo_fullframe",
+      "camera": "PUCPR",
+      "weather": "rainy",
+      "category": "error",
+      "available_frames": 30,
+      "selected_frames": 1
+    },
+    {
+      "method": "yolo_fullframe",
+      "camera": "PUCPR",
+      "weather": "rainy",
+      "category": "unknown_only",
+      "available_frames": 0,
+      "selected_frames": 0
+    },
+    {
+      "method": "yolo_fullframe",
+      "camera": "PUCPR",
+      "weather": "sunny",
+      "category": "correct",
+      "available_frames": 0,
+      "selected_frames": 0
+    },
+    {
+      "method": "yolo_fullframe",
+      "camera": "PUCPR",
+      "weather": "sunny",
+      "category": "error",
+      "available_frames": 26,
+      "selected_frames": 1
+    },
+    {
+      "method": "yolo_fullframe",
+      "camera": "PUCPR",
+      "weather": "sunny",
+      "category": "unknown_only",
+      "available_frames": 4,
+      "selected_frames": 1
+    },
+    {
+      "method": "yolo_fullframe",
+      "camera": "UFPR04",
+      "weather": "overcast",
+      "category": "correct",
+      "available_frames": 3,
+      "selected_frames": 1
+    },
+    {
+      "method": "yolo_fullframe",
+      "camera": "UFPR04",
+      "weather": "overcast",
+      "category": "error",
+      "available_frames": 2,
+      "selected_frames": 1
+    },
+    {
+      "method": "yolo_fullframe",
+      "camera": "UFPR04",
+      "weather": "overcast",
+      "category": "unknown_only",
+      "available_frames": 25,
+      "selected_frames": 1
+    },
+    {
+      "method": "yolo_fullframe",
+      "camera": "UFPR04",
+      "weather": "rainy",
+      "category": "correct",
+      "available_frames": 17,
+      "selected_frames": 1
+    },
+    {
+      "method": "yolo_fullframe",
+      "camera": "UFPR04",
+      "weather": "rainy",
+      "category": "error",
+      "available_frames": 0,
+      "selected_frames": 0
+    },
+    {
+      "method": "yolo_fullframe",
+      "camera": "UFPR04",
+      "weather": "rainy",
+      "category": "unknown_only",
+      "available_frames": 13,
+      "selected_frames": 1
+    },
+    {
+      "method": "yolo_fullframe",
+      "camera": "UFPR04",
+      "weather": "sunny",
+      "category": "correct",
+      "available_frames": 3,
+      "selected_frames": 1
+    },
+    {
+      "method": "yolo_fullframe",
+      "camera": "UFPR04",
+      "weather": "sunny",
+      "category": "error",
+      "available_frames": 10,
+      "selected_frames": 1
+    },
+    {
+      "method": "yolo_fullframe",
+      "camera": "UFPR04",
+      "weather": "sunny",
+      "category": "unknown_only",
+      "available_frames": 17,
+      "selected_frames": 1
+    },
+    {
+      "method": "yolo_fullframe",
+      "camera": "UFPR05",
+      "weather": "overcast",
+      "category": "correct",
+      "available_frames": 15,
+      "selected_frames": 1
+    },
+    {
+      "method": "yolo_fullframe",
+      "camera": "UFPR05",
+      "weather": "overcast",
+      "category": "error",
+      "available_frames": 8,
+      "selected_frames": 1
+    },
+    {
+      "method": "yolo_fullframe",
+      "camera": "UFPR05",
+      "weather": "overcast",
+      "category": "unknown_only",
+      "available_frames": 7,
+      "selected_frames": 1
+    },
+    {
+      "method": "yolo_fullframe",
+      "camera": "UFPR05",
+      "weather": "rainy",
+      "category": "correct",
+      "available_frames": 28,
+      "selected_frames": 1
+    },
+    {
+      "method": "yolo_fullframe",
+      "camera": "UFPR05",
+      "weather": "rainy",
+      "category": "error",
+      "available_frames": 2,
+      "selected_frames": 1
+    },
+    {
+      "method": "yolo_fullframe",
+      "camera": "UFPR05",
+      "weather": "rainy",
+      "category": "unknown_only",
+      "available_frames": 0,
+      "selected_frames": 0
+    },
+    {
+      "method": "yolo_fullframe",
+      "camera": "UFPR05",
+      "weather": "sunny",
+      "category": "correct",
+      "available_frames": 4,
+      "selected_frames": 1
+    },
+    {
+      "method": "yolo_fullframe",
+      "camera": "UFPR05",
+      "weather": "sunny",
+      "category": "error",
+      "available_frames": 11,
+      "selected_frames": 1
+    },
+    {
+      "method": "yolo_fullframe",
+      "camera": "UFPR05",
+      "weather": "sunny",
+      "category": "unknown_only",
+      "available_frames": 15,
+      "selected_frames": 1
+    },
+    {
+      "method": "yolo_hybrid",
+      "camera": "PUCPR",
+      "weather": "overcast",
+      "category": "correct",
+      "available_frames": 21,
+      "selected_frames": 1
+    },
+    {
+      "method": "yolo_hybrid",
+      "camera": "PUCPR",
+      "weather": "overcast",
+      "category": "error",
+      "available_frames": 0,
+      "selected_frames": 0
+    },
+    {
+      "method": "yolo_hybrid",
+      "camera": "PUCPR",
+      "weather": "overcast",
+      "category": "unknown_only",
+      "available_frames": 9,
+      "selected_frames": 1
+    },
+    {
+      "method": "yolo_hybrid",
+      "camera": "PUCPR",
+      "weather": "rainy",
+      "category": "correct",
+      "available_frames": 0,
+      "selected_frames": 0
+    },
+    {
+      "method": "yolo_hybrid",
+      "camera": "PUCPR",
+      "weather": "rainy",
+      "category": "error",
+      "available_frames": 30,
+      "selected_frames": 1
+    },
+    {
+      "method": "yolo_hybrid",
+      "camera": "PUCPR",
+      "weather": "rainy",
+      "category": "unknown_only",
+      "available_frames": 0,
+      "selected_frames": 0
+    },
+    {
+      "method": "yolo_hybrid",
+      "camera": "PUCPR",
+      "weather": "sunny",
+      "category": "correct",
+      "available_frames": 1,
+      "selected_frames": 1
+    },
+    {
+      "method": "yolo_hybrid",
+      "camera": "PUCPR",
+      "weather": "sunny",
+      "category": "error",
+      "available_frames": 21,
+      "selected_frames": 1
+    },
+    {
+      "method": "yolo_hybrid",
+      "camera": "PUCPR",
+      "weather": "sunny",
+      "category": "unknown_only",
+      "available_frames": 8,
+      "selected_frames": 1
+    },
+    {
+      "method": "yolo_hybrid",
+      "camera": "UFPR04",
+      "weather": "overcast",
+      "category": "correct",
+      "available_frames": 5,
+      "selected_frames": 1
+    },
+    {
+      "method": "yolo_hybrid",
+      "camera": "UFPR04",
+      "weather": "overcast",
+      "category": "error",
+      "available_frames": 0,
+      "selected_frames": 0
+    },
+    {
+      "method": "yolo_hybrid",
+      "camera": "UFPR04",
+      "weather": "overcast",
+      "category": "unknown_only",
+      "available_frames": 25,
+      "selected_frames": 1
+    },
+    {
+      "method": "yolo_hybrid",
+      "camera": "UFPR04",
+      "weather": "rainy",
+      "category": "correct",
+      "available_frames": 17,
+      "selected_frames": 1
+    },
+    {
+      "method": "yolo_hybrid",
+      "camera": "UFPR04",
+      "weather": "rainy",
+      "category": "error",
+      "available_frames": 0,
+      "selected_frames": 0
+    },
+    {
+      "method": "yolo_hybrid",
+      "camera": "UFPR04",
+      "weather": "rainy",
+      "category": "unknown_only",
+      "available_frames": 13,
+      "selected_frames": 1
+    },
+    {
+      "method": "yolo_hybrid",
+      "camera": "UFPR04",
+      "weather": "sunny",
+      "category": "correct",
+      "available_frames": 5,
+      "selected_frames": 1
+    },
+    {
+      "method": "yolo_hybrid",
+      "camera": "UFPR04",
+      "weather": "sunny",
+      "category": "error",
+      "available_frames": 3,
+      "selected_frames": 1
+    },
+    {
+      "method": "yolo_hybrid",
+      "camera": "UFPR04",
+      "weather": "sunny",
+      "category": "unknown_only",
+      "available_frames": 22,
+      "selected_frames": 1
+    },
+    {
+      "method": "yolo_hybrid",
+      "camera": "UFPR05",
+      "weather": "overcast",
+      "category": "correct",
+      "available_frames": 23,
+      "selected_frames": 1
+    },
+    {
+      "method": "yolo_hybrid",
+      "camera": "UFPR05",
+      "weather": "overcast",
+      "category": "error",
+      "available_frames": 1,
+      "selected_frames": 1
+    },
+    {
+      "method": "yolo_hybrid",
+      "camera": "UFPR05",
+      "weather": "overcast",
+      "category": "unknown_only",
+      "available_frames": 6,
+      "selected_frames": 1
+    },
+    {
+      "method": "yolo_hybrid",
+      "camera": "UFPR05",
+      "weather": "rainy",
+      "category": "correct",
+      "available_frames": 30,
+      "selected_frames": 1
+    },
+    {
+      "method": "yolo_hybrid",
+      "camera": "UFPR05",
+      "weather": "rainy",
+      "category": "error",
+      "available_frames": 0,
+      "selected_frames": 0
+    },
+    {
+      "method": "yolo_hybrid",
+      "camera": "UFPR05",
+      "weather": "rainy",
+      "category": "unknown_only",
+      "available_frames": 0,
+      "selected_frames": 0
+    },
+    {
+      "method": "yolo_hybrid",
+      "camera": "UFPR05",
+      "weather": "sunny",
+      "category": "correct",
+      "available_frames": 9,
+      "selected_frames": 1
+    },
+    {
+      "method": "yolo_hybrid",
+      "camera": "UFPR05",
+      "weather": "sunny",
+      "category": "error",
+      "available_frames": 4,
+      "selected_frames": 1
+    },
+    {
+      "method": "yolo_hybrid",
+      "camera": "UFPR05",
+      "weather": "sunny",
+      "category": "unknown_only",
+      "available_frames": 17,
+      "selected_frames": 1
+    },
+    {
+      "method": "yolo_fullframe_highres",
+      "camera": "PUCPR",
+      "weather": "overcast",
+      "category": "correct",
+      "available_frames": 21,
+      "selected_frames": 1
+    },
+    {
+      "method": "yolo_fullframe_highres",
+      "camera": "PUCPR",
+      "weather": "overcast",
+      "category": "error",
+      "available_frames": 0,
+      "selected_frames": 0
+    },
+    {
+      "method": "yolo_fullframe_highres",
+      "camera": "PUCPR",
+      "weather": "overcast",
+      "category": "unknown_only",
+      "available_frames": 9,
+      "selected_frames": 1
+    },
+    {
+      "method": "yolo_fullframe_highres",
+      "camera": "PUCPR",
+      "weather": "rainy",
+      "category": "correct",
+      "available_frames": 0,
+      "selected_frames": 0
+    },
+    {
+      "method": "yolo_fullframe_highres",
+      "camera": "PUCPR",
+      "weather": "rainy",
+      "category": "error",
+      "available_frames": 30,
+      "selected_frames": 1
+    },
+    {
+      "method": "yolo_fullframe_highres",
+      "camera": "PUCPR",
+      "weather": "rainy",
+      "category": "unknown_only",
+      "available_frames": 0,
+      "selected_frames": 0
+    },
+    {
+      "method": "yolo_fullframe_highres",
+      "camera": "PUCPR",
+      "weather": "sunny",
+      "category": "correct",
+      "available_frames": 2,
+      "selected_frames": 1
+    },
+    {
+      "method": "yolo_fullframe_highres",
+      "camera": "PUCPR",
+      "weather": "sunny",
+      "category": "error",
+      "available_frames": 15,
+      "selected_frames": 1
+    },
+    {
+      "method": "yolo_fullframe_highres",
+      "camera": "PUCPR",
+      "weather": "sunny",
+      "category": "unknown_only",
+      "available_frames": 13,
+      "selected_frames": 1
+    },
+    {
+      "method": "yolo_fullframe_highres",
+      "camera": "UFPR04",
+      "weather": "overcast",
+      "category": "correct",
+      "available_frames": 5,
+      "selected_frames": 1
+    },
+    {
+      "method": "yolo_fullframe_highres",
+      "camera": "UFPR04",
+      "weather": "overcast",
+      "category": "error",
+      "available_frames": 0,
+      "selected_frames": 0
+    },
+    {
+      "method": "yolo_fullframe_highres",
+      "camera": "UFPR04",
+      "weather": "overcast",
+      "category": "unknown_only",
+      "available_frames": 25,
+      "selected_frames": 1
+    },
+    {
+      "method": "yolo_fullframe_highres",
+      "camera": "UFPR04",
+      "weather": "rainy",
+      "category": "correct",
+      "available_frames": 17,
+      "selected_frames": 1
+    },
+    {
+      "method": "yolo_fullframe_highres",
+      "camera": "UFPR04",
+      "weather": "rainy",
+      "category": "error",
+      "available_frames": 0,
+      "selected_frames": 0
+    },
+    {
+      "method": "yolo_fullframe_highres",
+      "camera": "UFPR04",
+      "weather": "rainy",
+      "category": "unknown_only",
+      "available_frames": 13,
+      "selected_frames": 1
+    },
+    {
+      "method": "yolo_fullframe_highres",
+      "camera": "UFPR04",
+      "weather": "sunny",
+      "category": "correct",
+      "available_frames": 5,
+      "selected_frames": 1
+    },
+    {
+      "method": "yolo_fullframe_highres",
+      "camera": "UFPR04",
+      "weather": "sunny",
+      "category": "error",
+      "available_frames": 5,
+      "selected_frames": 1
+    },
+    {
+      "method": "yolo_fullframe_highres",
+      "camera": "UFPR04",
+      "weather": "sunny",
+      "category": "unknown_only",
+      "available_frames": 20,
+      "selected_frames": 1
+    },
+    {
+      "method": "yolo_fullframe_highres",
+      "camera": "UFPR05",
+      "weather": "overcast",
+      "category": "correct",
+      "available_frames": 21,
+      "selected_frames": 1
+    },
+    {
+      "method": "yolo_fullframe_highres",
+      "camera": "UFPR05",
+      "weather": "overcast",
+      "category": "error",
+      "available_frames": 1,
+      "selected_frames": 1
+    },
+    {
+      "method": "yolo_fullframe_highres",
+      "camera": "UFPR05",
+      "weather": "overcast",
+      "category": "unknown_only",
+      "available_frames": 8,
+      "selected_frames": 1
+    },
+    {
+      "method": "yolo_fullframe_highres",
+      "camera": "UFPR05",
+      "weather": "rainy",
+      "category": "correct",
+      "available_frames": 28,
+      "selected_frames": 1
+    },
+    {
+      "method": "yolo_fullframe_highres",
+      "camera": "UFPR05",
+      "weather": "rainy",
+      "category": "error",
+      "available_frames": 1,
+      "selected_frames": 1
+    },
+    {
+      "method": "yolo_fullframe_highres",
+      "camera": "UFPR05",
+      "weather": "rainy",
+      "category": "unknown_only",
+      "available_frames": 1,
+      "selected_frames": 1
+    },
+    {
+      "method": "yolo_fullframe_highres",
+      "camera": "UFPR05",
+      "weather": "sunny",
+      "category": "correct",
+      "available_frames": 9,
+      "selected_frames": 1
+    },
+    {
+      "method": "yolo_fullframe_highres",
+      "camera": "UFPR05",
+      "weather": "sunny",
+      "category": "error",
+      "available_frames": 3,
+      "selected_frames": 1
+    },
+    {
+      "method": "yolo_fullframe_highres",
+      "camera": "UFPR05",
+      "weather": "sunny",
+      "category": "unknown_only",
+      "available_frames": 18,
+      "selected_frames": 1
+    }
+  ],
+  "selected": [
+    {
+      "method": "hog_svm",
+      "camera": "PUCPR",
+      "weather": "overcast",
+      "category": "correct",
+      "sample_id": "PUCPR/Cloudy/2012-10-12/2012-10-12_09_12_38",
+      "source_image": "PUCPR/Cloudy/2012-10-12/2012-10-12_09_12_38.jpg",
+      "figure": "hog_svm/PUCPR/overcast/correct/db1176889de09da7.jpg"
+    },
+    {
+      "method": "hog_svm",
+      "camera": "PUCPR",
+      "weather": "overcast",
+      "category": "error",
+      "sample_id": "PUCPR/Cloudy/2012-10-12/2012-10-12_09_17_38",
+      "source_image": "PUCPR/Cloudy/2012-10-12/2012-10-12_09_17_38.jpg",
+      "figure": "hog_svm/PUCPR/overcast/error/36f6e4bcec205915.jpg"
+    },
+    {
+      "method": "hog_svm",
+      "camera": "PUCPR",
+      "weather": "overcast",
+      "category": "unknown_only",
+      "sample_id": "PUCPR/Cloudy/2012-10-12/2012-10-12_06_02_29",
+      "source_image": "PUCPR/Cloudy/2012-10-12/2012-10-12_06_02_29.jpg",
+      "figure": "hog_svm/PUCPR/overcast/unknown_only/44a0a03a365da54e.jpg"
+    },
+    {
+      "method": "hog_svm",
+      "camera": "PUCPR",
+      "weather": "rainy",
+      "category": "correct",
+      "sample_id": "PUCPR/Rainy/2012-10-25/2012-10-25_10_18_25",
+      "source_image": "PUCPR/Rainy/2012-10-25/2012-10-25_10_18_25.jpg",
+      "figure": "hog_svm/PUCPR/rainy/correct/1ce0de00782b8ea6.jpg"
+    },
+    {
+      "method": "hog_svm",
+      "camera": "PUCPR",
+      "weather": "rainy",
+      "category": "error",
+      "sample_id": "PUCPR/Rainy/2012-10-25/2012-10-25_09_33_23",
+      "source_image": "PUCPR/Rainy/2012-10-25/2012-10-25_09_33_23.jpg",
+      "figure": "hog_svm/PUCPR/rainy/error/f5943cb5d67fb1a3.jpg"
+    },
+    {
+      "method": "hog_svm",
+      "camera": "PUCPR",
+      "weather": "rainy",
+      "category": "unknown_only",
+      "sample_id": "PUCPR/Rainy/2012-10-25/2012-10-25_08_48_20",
+      "source_image": "PUCPR/Rainy/2012-10-25/2012-10-25_08_48_20.jpg",
+      "figure": "hog_svm/PUCPR/rainy/unknown_only/b14e190af41e5315.jpg"
+    },
+    {
+      "method": "hog_svm",
+      "camera": "PUCPR",
+      "weather": "sunny",
+      "category": "correct",
+      "sample_id": "PUCPR/Sunny/2012-10-29/2012-10-29_06_42_53",
+      "source_image": "PUCPR/Sunny/2012-10-29/2012-10-29_06_42_53.jpg",
+      "figure": "hog_svm/PUCPR/sunny/correct/a5dbe6bcbce06440.jpg"
+    },
+    {
+      "method": "hog_svm",
+      "camera": "PUCPR",
+      "weather": "sunny",
+      "category": "error",
+      "sample_id": "PUCPR/Sunny/2012-09-11/2012-09-11_15_43_35",
+      "source_image": "PUCPR/Sunny/2012-09-11/2012-09-11_15_43_35.jpg",
+      "figure": "hog_svm/PUCPR/sunny/error/23d3c6719d0d3818.jpg"
+    },
+    {
+      "method": "hog_svm",
+      "camera": "PUCPR",
+      "weather": "sunny",
+      "category": "unknown_only",
+      "sample_id": "PUCPR/Sunny/2012-09-11/2012-09-11_16_34_18",
+      "source_image": "PUCPR/Sunny/2012-09-11/2012-09-11_16_34_18.jpg",
+      "figure": "hog_svm/PUCPR/sunny/unknown_only/d40615e2f13e2742.jpg"
+    },
+    {
+      "method": "hog_svm",
+      "camera": "UFPR04",
+      "weather": "overcast",
+      "category": "correct",
+      "sample_id": "UFPR04/Cloudy/2013-01-19/2013-01-19_11_45_07",
+      "source_image": "UFPR04/Cloudy/2013-01-19/2013-01-19_11_45_07.jpg",
+      "figure": "hog_svm/UFPR04/overcast/correct/8d0fe9a72389dae0.jpg"
+    },
+    {
+      "method": "hog_svm",
+      "camera": "UFPR04",
+      "weather": "overcast",
+      "category": "error",
+      "sample_id": "UFPR04/Cloudy/2013-01-19/2013-01-19_07_40_02",
+      "source_image": "UFPR04/Cloudy/2013-01-19/2013-01-19_07_40_02.jpg",
+      "figure": "hog_svm/UFPR04/overcast/error/26313adb4598443c.jpg"
+    },
+    {
+      "method": "hog_svm",
+      "camera": "UFPR04",
+      "weather": "overcast",
+      "category": "unknown_only",
+      "sample_id": "UFPR04/Cloudy/2013-01-19/2013-01-19_10_05_05",
+      "source_image": "UFPR04/Cloudy/2013-01-19/2013-01-19_10_05_05.jpg",
+      "figure": "hog_svm/UFPR04/overcast/unknown_only/6423eebad7db0298.jpg"
+    },
+    {
+      "method": "hog_svm",
+      "camera": "UFPR04",
+      "weather": "rainy",
+      "category": "correct",
+      "sample_id": "UFPR04/Rainy/2012-12-26/2012-12-26_16_10_12",
+      "source_image": "UFPR04/Rainy/2012-12-26/2012-12-26_16_10_12.jpg",
+      "figure": "hog_svm/UFPR04/rainy/correct/c41a2d253881e724.jpg"
+    },
+    {
+      "method": "hog_svm",
+      "camera": "UFPR04",
+      "weather": "rainy",
+      "category": "error",
+      "sample_id": "UFPR04/Rainy/2012-12-26/2012-12-26_15_40_11",
+      "source_image": "UFPR04/Rainy/2012-12-26/2012-12-26_15_40_11.jpg",
+      "figure": "hog_svm/UFPR04/rainy/error/f75d428eac05f30c.jpg"
+    },
+    {
+      "method": "hog_svm",
+      "camera": "UFPR04",
+      "weather": "rainy",
+      "category": "unknown_only",
+      "sample_id": "UFPR04/Rainy/2012-12-07/2012-12-07_17_07_25",
+      "source_image": "UFPR04/Rainy/2012-12-07/2012-12-07_17_07_25.jpg",
+      "figure": "hog_svm/UFPR04/rainy/unknown_only/a8f249d3f602ab89.jpg"
+    },
+    {
+      "method": "hog_svm",
+      "camera": "UFPR04",
+      "weather": "sunny",
+      "category": "correct",
+      "sample_id": "UFPR04/Sunny/2012-12-18/2012-12-18_11_45_07",
+      "source_image": "UFPR04/Sunny/2012-12-18/2012-12-18_11_45_07.jpg",
+      "figure": "hog_svm/UFPR04/sunny/correct/4b078f1afd9458fa.jpg"
+    },
+    {
+      "method": "hog_svm",
+      "camera": "UFPR04",
+      "weather": "sunny",
+      "category": "error",
+      "sample_id": "UFPR04/Sunny/2012-12-07/2012-12-07_17_32_25",
+      "source_image": "UFPR04/Sunny/2012-12-07/2012-12-07_17_32_25.jpg",
+      "figure": "hog_svm/UFPR04/sunny/error/59a3fd7abc81d7cc.jpg"
+    },
+    {
+      "method": "hog_svm",
+      "camera": "UFPR04",
+      "weather": "sunny",
+      "category": "unknown_only",
+      "sample_id": "UFPR04/Sunny/2012-12-07/2012-12-07_18_27_26",
+      "source_image": "UFPR04/Sunny/2012-12-07/2012-12-07_18_27_26.jpg",
+      "figure": "hog_svm/UFPR04/sunny/unknown_only/f05959e70befc6db.jpg"
+    },
+    {
+      "method": "hog_svm",
+      "camera": "UFPR05",
+      "weather": "overcast",
+      "category": "correct",
+      "sample_id": "UFPR05/Cloudy/2013-02-26/2013-02-26_13_29_34",
+      "source_image": "UFPR05/Cloudy/2013-02-26/2013-02-26_13_29_34.jpg",
+      "figure": "hog_svm/UFPR05/overcast/correct/0dfce4dc0491b3d5.jpg"
+    },
+    {
+      "method": "hog_svm",
+      "camera": "UFPR05",
+      "weather": "overcast",
+      "category": "error",
+      "sample_id": "UFPR05/Cloudy/2013-02-26/2013-02-26_15_34_36",
+      "source_image": "UFPR05/Cloudy/2013-02-26/2013-02-26_15_34_36.jpg",
+      "figure": "hog_svm/UFPR05/overcast/error/52c4190d3ee4104c.jpg"
+    },
+    {
+      "method": "hog_svm",
+      "camera": "UFPR05",
+      "weather": "rainy",
+      "category": "correct",
+      "sample_id": "UFPR05/Rainy/2013-02-26/2013-02-26_13_19_33",
+      "source_image": "UFPR05/Rainy/2013-02-26/2013-02-26_13_19_33.jpg",
+      "figure": "hog_svm/UFPR05/rainy/correct/37c8fcdb9c73f7ce.jpg"
+    },
+    {
+      "method": "hog_svm",
+      "camera": "UFPR05",
+      "weather": "rainy",
+      "category": "error",
+      "sample_id": "UFPR05/Rainy/2013-02-26/2013-02-26_13_04_33",
+      "source_image": "UFPR05/Rainy/2013-02-26/2013-02-26_13_04_33.jpg",
+      "figure": "hog_svm/UFPR05/rainy/error/09a03cf7b715c8ee.jpg"
+    },
+    {
+      "method": "hog_svm",
+      "camera": "UFPR05",
+      "weather": "sunny",
+      "category": "correct",
+      "sample_id": "UFPR05/Sunny/2013-02-26/2013-02-26_15_09_35",
+      "source_image": "UFPR05/Sunny/2013-02-26/2013-02-26_15_09_35.jpg",
+      "figure": "hog_svm/UFPR05/sunny/correct/6de9c17c5aaaa164.jpg"
+    },
+    {
+      "method": "hog_svm",
+      "camera": "UFPR05",
+      "weather": "sunny",
+      "category": "error",
+      "sample_id": "UFPR05/Sunny/2013-02-24/2013-02-24_13_20_07",
+      "source_image": "UFPR05/Sunny/2013-02-24/2013-02-24_13_20_07.jpg",
+      "figure": "hog_svm/UFPR05/sunny/error/afa8f35c2d8fe741.jpg"
+    },
+    {
+      "method": "hog_svm",
+      "camera": "UFPR05",
+      "weather": "sunny",
+      "category": "unknown_only",
+      "sample_id": "UFPR05/Sunny/2013-02-24/2013-02-24_06_30_00",
+      "source_image": "UFPR05/Sunny/2013-02-24/2013-02-24_06_30_00.jpg",
+      "figure": "hog_svm/UFPR05/sunny/unknown_only/60ba2ec55af7051f.jpg"
+    },
+    {
+      "method": "yolo_fullframe",
+      "camera": "PUCPR",
+      "weather": "overcast",
+      "category": "correct",
+      "sample_id": "PUCPR/Cloudy/2012-10-12/2012-10-12_09_12_38",
+      "source_image": "PUCPR/Cloudy/2012-10-12/2012-10-12_09_12_38.jpg",
+      "figure": "yolo_fullframe/PUCPR/overcast/correct/db1176889de09da7.jpg"
+    },
+    {
+      "method": "yolo_fullframe",
+      "camera": "PUCPR",
+      "weather": "overcast",
+      "category": "unknown_only",
+      "sample_id": "PUCPR/Cloudy/2012-10-12/2012-10-12_06_02_29",
+      "source_image": "PUCPR/Cloudy/2012-10-12/2012-10-12_06_02_29.jpg",
+      "figure": "yolo_fullframe/PUCPR/overcast/unknown_only/44a0a03a365da54e.jpg"
+    },
+    {
+      "method": "yolo_fullframe",
+      "camera": "PUCPR",
+      "weather": "rainy",
+      "category": "error",
+      "sample_id": "PUCPR/Rainy/2012-10-25/2012-10-25_08_48_20",
+      "source_image": "PUCPR/Rainy/2012-10-25/2012-10-25_08_48_20.jpg",
+      "figure": "yolo_fullframe/PUCPR/rainy/error/b14e190af41e5315.jpg"
+    },
+    {
+      "method": "yolo_fullframe",
+      "camera": "PUCPR",
+      "weather": "sunny",
+      "category": "error",
+      "sample_id": "PUCPR/Sunny/2012-09-11/2012-09-11_15_43_35",
+      "source_image": "PUCPR/Sunny/2012-09-11/2012-09-11_15_43_35.jpg",
+      "figure": "yolo_fullframe/PUCPR/sunny/error/23d3c6719d0d3818.jpg"
+    },
+    {
+      "method": "yolo_fullframe",
+      "camera": "PUCPR",
+      "weather": "sunny",
+      "category": "unknown_only",
+      "sample_id": "PUCPR/Sunny/2012-10-29/2012-10-29_10_28_04",
+      "source_image": "PUCPR/Sunny/2012-10-29/2012-10-29_10_28_04.jpg",
+      "figure": "yolo_fullframe/PUCPR/sunny/unknown_only/92f95e0e2d20c664.jpg"
+    },
+    {
+      "method": "yolo_fullframe",
+      "camera": "UFPR04",
+      "weather": "overcast",
+      "category": "correct",
+      "sample_id": "UFPR04/Cloudy/2013-01-19/2013-01-19_11_45_07",
+      "source_image": "UFPR04/Cloudy/2013-01-19/2013-01-19_11_45_07.jpg",
+      "figure": "yolo_fullframe/UFPR04/overcast/correct/8d0fe9a72389dae0.jpg"
+    },
+    {
+      "method": "yolo_fullframe",
+      "camera": "UFPR04",
+      "weather": "overcast",
+      "category": "error",
+      "sample_id": "UFPR04/Cloudy/2013-01-19/2013-01-19_17_05_13",
+      "source_image": "UFPR04/Cloudy/2013-01-19/2013-01-19_17_05_13.jpg",
+      "figure": "yolo_fullframe/UFPR04/overcast/error/c2a7aa4a66e88736.jpg"
+    },
+    {
+      "method": "yolo_fullframe",
+      "camera": "UFPR04",
+      "weather": "overcast",
+      "category": "unknown_only",
+      "sample_id": "UFPR04/Cloudy/2013-01-19/2013-01-19_07_40_02",
+      "source_image": "UFPR04/Cloudy/2013-01-19/2013-01-19_07_40_02.jpg",
+      "figure": "yolo_fullframe/UFPR04/overcast/unknown_only/26313adb4598443c.jpg"
+    },
+    {
+      "method": "yolo_fullframe",
+      "camera": "UFPR04",
+      "weather": "rainy",
+      "category": "correct",
+      "sample_id": "UFPR04/Rainy/2012-12-26/2012-12-26_15_40_11",
+      "source_image": "UFPR04/Rainy/2012-12-26/2012-12-26_15_40_11.jpg",
+      "figure": "yolo_fullframe/UFPR04/rainy/correct/f75d428eac05f30c.jpg"
+    },
+    {
+      "method": "yolo_fullframe",
+      "camera": "UFPR04",
+      "weather": "rainy",
+      "category": "unknown_only",
+      "sample_id": "UFPR04/Rainy/2012-12-07/2012-12-07_17_07_25",
+      "source_image": "UFPR04/Rainy/2012-12-07/2012-12-07_17_07_25.jpg",
+      "figure": "yolo_fullframe/UFPR04/rainy/unknown_only/a8f249d3f602ab89.jpg"
+    },
+    {
+      "method": "yolo_fullframe",
+      "camera": "UFPR04",
+      "weather": "sunny",
+      "category": "correct",
+      "sample_id": "UFPR04/Sunny/2012-12-25/2012-12-25_12_00_07",
+      "source_image": "UFPR04/Sunny/2012-12-25/2012-12-25_12_00_07.jpg",
+      "figure": "yolo_fullframe/UFPR04/sunny/correct/198dfdd434d8ee84.jpg"
+    },
+    {
+      "method": "yolo_fullframe",
+      "camera": "UFPR04",
+      "weather": "sunny",
+      "category": "error",
+      "sample_id": "UFPR04/Sunny/2012-12-18/2012-12-18_09_55_05",
+      "source_image": "UFPR04/Sunny/2012-12-18/2012-12-18_09_55_05.jpg",
+      "figure": "yolo_fullframe/UFPR04/sunny/error/0d315c2ce926aded.jpg"
+    },
+    {
+      "method": "yolo_fullframe",
+      "camera": "UFPR04",
+      "weather": "sunny",
+      "category": "unknown_only",
+      "sample_id": "UFPR04/Sunny/2012-12-07/2012-12-07_17_32_25",
+      "source_image": "UFPR04/Sunny/2012-12-07/2012-12-07_17_32_25.jpg",
+      "figure": "yolo_fullframe/UFPR04/sunny/unknown_only/59a3fd7abc81d7cc.jpg"
+    },
+    {
+      "method": "yolo_fullframe",
+      "camera": "UFPR05",
+      "weather": "overcast",
+      "category": "correct",
+      "sample_id": "UFPR05/Cloudy/2013-03-02/2013-03-02_06_05_00",
+      "source_image": "UFPR05/Cloudy/2013-03-02/2013-03-02_06_05_00.jpg",
+      "figure": "yolo_fullframe/UFPR05/overcast/correct/d6a6acea7afbb5fd.jpg"
+    },
+    {
+      "method": "yolo_fullframe",
+      "camera": "UFPR05",
+      "weather": "overcast",
+      "category": "error",
+      "sample_id": "UFPR05/Cloudy/2013-02-26/2013-02-26_13_29_34",
+      "source_image": "UFPR05/Cloudy/2013-02-26/2013-02-26_13_29_34.jpg",
+      "figure": "yolo_fullframe/UFPR05/overcast/error/0dfce4dc0491b3d5.jpg"
+    },
+    {
+      "method": "yolo_fullframe",
+      "camera": "UFPR05",
+      "weather": "overcast",
+      "category": "unknown_only",
+      "sample_id": "UFPR05/Cloudy/2013-03-02/2013-03-02_06_10_00",
+      "source_image": "UFPR05/Cloudy/2013-03-02/2013-03-02_06_10_00.jpg",
+      "figure": "yolo_fullframe/UFPR05/overcast/unknown_only/1c0e312acf70579d.jpg"
+    },
+    {
+      "method": "yolo_fullframe",
+      "camera": "UFPR05",
+      "weather": "rainy",
+      "category": "correct",
+      "sample_id": "UFPR05/Rainy/2013-04-13/2013-04-13_06_50_01",
+      "source_image": "UFPR05/Rainy/2013-04-13/2013-04-13_06_50_01.jpg",
+      "figure": "yolo_fullframe/UFPR05/rainy/correct/96f45b73a54c6d77.jpg"
+    },
+    {
+      "method": "yolo_fullframe",
+      "camera": "UFPR05",
+      "weather": "rainy",
+      "category": "error",
+      "sample_id": "UFPR05/Rainy/2013-02-26/2013-02-26_13_04_33",
+      "source_image": "UFPR05/Rainy/2013-02-26/2013-02-26_13_04_33.jpg",
+      "figure": "yolo_fullframe/UFPR05/rainy/error/09a03cf7b715c8ee.jpg"
+    },
+    {
+      "method": "yolo_fullframe",
+      "camera": "UFPR05",
+      "weather": "sunny",
+      "category": "correct",
+      "sample_id": "UFPR05/Sunny/2013-04-14/2013-04-14_11_25_05",
+      "source_image": "UFPR05/Sunny/2013-04-14/2013-04-14_11_25_05.jpg",
+      "figure": "yolo_fullframe/UFPR05/sunny/correct/0e4f4a22831e47a9.jpg"
+    },
+    {
+      "method": "yolo_fullframe",
+      "camera": "UFPR05",
+      "weather": "sunny",
+      "category": "error",
+      "sample_id": "UFPR05/Sunny/2013-02-26/2013-02-26_15_09_35",
+      "source_image": "UFPR05/Sunny/2013-02-26/2013-02-26_15_09_35.jpg",
+      "figure": "yolo_fullframe/UFPR05/sunny/error/6de9c17c5aaaa164.jpg"
+    },
+    {
+      "method": "yolo_fullframe",
+      "camera": "UFPR05",
+      "weather": "sunny",
+      "category": "unknown_only",
+      "sample_id": "UFPR05/Sunny/2013-02-24/2013-02-24_06_30_00",
+      "source_image": "UFPR05/Sunny/2013-02-24/2013-02-24_06_30_00.jpg",
+      "figure": "yolo_fullframe/UFPR05/sunny/unknown_only/60ba2ec55af7051f.jpg"
+    },
+    {
+      "method": "yolo_hybrid",
+      "camera": "PUCPR",
+      "weather": "overcast",
+      "category": "correct",
+      "sample_id": "PUCPR/Cloudy/2012-10-12/2012-10-12_09_12_38",
+      "source_image": "PUCPR/Cloudy/2012-10-12/2012-10-12_09_12_38.jpg",
+      "figure": "yolo_hybrid/PUCPR/overcast/correct/db1176889de09da7.jpg"
+    },
+    {
+      "method": "yolo_hybrid",
+      "camera": "PUCPR",
+      "weather": "overcast",
+      "category": "unknown_only",
+      "sample_id": "PUCPR/Cloudy/2012-10-12/2012-10-12_06_02_29",
+      "source_image": "PUCPR/Cloudy/2012-10-12/2012-10-12_06_02_29.jpg",
+      "figure": "yolo_hybrid/PUCPR/overcast/unknown_only/44a0a03a365da54e.jpg"
+    },
+    {
+      "method": "yolo_hybrid",
+      "camera": "PUCPR",
+      "weather": "rainy",
+      "category": "error",
+      "sample_id": "PUCPR/Rainy/2012-10-25/2012-10-25_08_48_20",
+      "source_image": "PUCPR/Rainy/2012-10-25/2012-10-25_08_48_20.jpg",
+      "figure": "yolo_hybrid/PUCPR/rainy/error/b14e190af41e5315.jpg"
+    },
+    {
+      "method": "yolo_hybrid",
+      "camera": "PUCPR",
+      "weather": "sunny",
+      "category": "correct",
+      "sample_id": "PUCPR/Sunny/2012-10-29/2012-10-29_06_42_53",
+      "source_image": "PUCPR/Sunny/2012-10-29/2012-10-29_06_42_53.jpg",
+      "figure": "yolo_hybrid/PUCPR/sunny/correct/a5dbe6bcbce06440.jpg"
+    },
+    {
+      "method": "yolo_hybrid",
+      "camera": "PUCPR",
+      "weather": "sunny",
+      "category": "error",
+      "sample_id": "PUCPR/Sunny/2012-09-11/2012-09-11_15_43_35",
+      "source_image": "PUCPR/Sunny/2012-09-11/2012-09-11_15_43_35.jpg",
+      "figure": "yolo_hybrid/PUCPR/sunny/error/23d3c6719d0d3818.jpg"
+    },
+    {
+      "method": "yolo_hybrid",
+      "camera": "PUCPR",
+      "weather": "sunny",
+      "category": "unknown_only",
+      "sample_id": "PUCPR/Sunny/2012-10-29/2012-10-29_10_28_04",
+      "source_image": "PUCPR/Sunny/2012-10-29/2012-10-29_10_28_04.jpg",
+      "figure": "yolo_hybrid/PUCPR/sunny/unknown_only/92f95e0e2d20c664.jpg"
+    },
+    {
+      "method": "yolo_hybrid",
+      "camera": "UFPR04",
+      "weather": "overcast",
+      "category": "correct",
+      "sample_id": "UFPR04/Cloudy/2013-01-19/2013-01-19_11_45_07",
+      "source_image": "UFPR04/Cloudy/2013-01-19/2013-01-19_11_45_07.jpg",
+      "figure": "yolo_hybrid/UFPR04/overcast/correct/8d0fe9a72389dae0.jpg"
+    },
+    {
+      "method": "yolo_hybrid",
+      "camera": "UFPR04",
+      "weather": "overcast",
+      "category": "unknown_only",
+      "sample_id": "UFPR04/Cloudy/2013-01-19/2013-01-19_07_40_02",
+      "source_image": "UFPR04/Cloudy/2013-01-19/2013-01-19_07_40_02.jpg",
+      "figure": "yolo_hybrid/UFPR04/overcast/unknown_only/26313adb4598443c.jpg"
+    },
+    {
+      "method": "yolo_hybrid",
+      "camera": "UFPR04",
+      "weather": "rainy",
+      "category": "correct",
+      "sample_id": "UFPR04/Rainy/2012-12-26/2012-12-26_15_40_11",
+      "source_image": "UFPR04/Rainy/2012-12-26/2012-12-26_15_40_11.jpg",
+      "figure": "yolo_hybrid/UFPR04/rainy/correct/f75d428eac05f30c.jpg"
+    },
+    {
+      "method": "yolo_hybrid",
+      "camera": "UFPR04",
+      "weather": "rainy",
+      "category": "unknown_only",
+      "sample_id": "UFPR04/Rainy/2012-12-07/2012-12-07_17_07_25",
+      "source_image": "UFPR04/Rainy/2012-12-07/2012-12-07_17_07_25.jpg",
+      "figure": "yolo_hybrid/UFPR04/rainy/unknown_only/a8f249d3f602ab89.jpg"
+    },
+    {
+      "method": "yolo_hybrid",
+      "camera": "UFPR04",
+      "weather": "sunny",
+      "category": "correct",
+      "sample_id": "UFPR04/Sunny/2012-12-18/2012-12-18_09_55_05",
+      "source_image": "UFPR04/Sunny/2012-12-18/2012-12-18_09_55_05.jpg",
+      "figure": "yolo_hybrid/UFPR04/sunny/correct/0d315c2ce926aded.jpg"
+    },
+    {
+      "method": "yolo_hybrid",
+      "camera": "UFPR04",
+      "weather": "sunny",
+      "category": "error",
+      "sample_id": "UFPR04/Sunny/2012-12-18/2012-12-18_14_25_10",
+      "source_image": "UFPR04/Sunny/2012-12-18/2012-12-18_14_25_10.jpg",
+      "figure": "yolo_hybrid/UFPR04/sunny/error/c8a6104899a35a33.jpg"
+    },
+    {
+      "method": "yolo_hybrid",
+      "camera": "UFPR04",
+      "weather": "sunny",
+      "category": "unknown_only",
+      "sample_id": "UFPR04/Sunny/2012-12-07/2012-12-07_17_32_25",
+      "source_image": "UFPR04/Sunny/2012-12-07/2012-12-07_17_32_25.jpg",
+      "figure": "yolo_hybrid/UFPR04/sunny/unknown_only/59a3fd7abc81d7cc.jpg"
+    },
+    {
+      "method": "yolo_hybrid",
+      "camera": "UFPR05",
+      "weather": "overcast",
+      "category": "correct",
+      "sample_id": "UFPR05/Cloudy/2013-02-26/2013-02-26_13_29_34",
+      "source_image": "UFPR05/Cloudy/2013-02-26/2013-02-26_13_29_34.jpg",
+      "figure": "yolo_hybrid/UFPR05/overcast/correct/0dfce4dc0491b3d5.jpg"
+    },
+    {
+      "method": "yolo_hybrid",
+      "camera": "UFPR05",
+      "weather": "overcast",
+      "category": "error",
+      "sample_id": "UFPR05/Cloudy/2013-04-13/2013-04-13_16_35_11",
+      "source_image": "UFPR05/Cloudy/2013-04-13/2013-04-13_16_35_11.jpg",
+      "figure": "yolo_hybrid/UFPR05/overcast/error/f77813eeaa681e39.jpg"
+    },
+    {
+      "method": "yolo_hybrid",
+      "camera": "UFPR05",
+      "weather": "overcast",
+      "category": "unknown_only",
+      "sample_id": "UFPR05/Cloudy/2013-03-02/2013-03-02_06_10_00",
+      "source_image": "UFPR05/Cloudy/2013-03-02/2013-03-02_06_10_00.jpg",
+      "figure": "yolo_hybrid/UFPR05/overcast/unknown_only/1c0e312acf70579d.jpg"
+    },
+    {
+      "method": "yolo_hybrid",
+      "camera": "UFPR05",
+      "weather": "rainy",
+      "category": "correct",
+      "sample_id": "UFPR05/Rainy/2013-02-26/2013-02-26_13_04_33",
+      "source_image": "UFPR05/Rainy/2013-02-26/2013-02-26_13_04_33.jpg",
+      "figure": "yolo_hybrid/UFPR05/rainy/correct/09a03cf7b715c8ee.jpg"
+    },
+    {
+      "method": "yolo_hybrid",
+      "camera": "UFPR05",
+      "weather": "sunny",
+      "category": "correct",
+      "sample_id": "UFPR05/Sunny/2013-02-26/2013-02-26_15_09_35",
+      "source_image": "UFPR05/Sunny/2013-02-26/2013-02-26_15_09_35.jpg",
+      "figure": "yolo_hybrid/UFPR05/sunny/correct/6de9c17c5aaaa164.jpg"
+    },
+    {
+      "method": "yolo_hybrid",
+      "camera": "UFPR05",
+      "weather": "sunny",
+      "category": "error",
+      "sample_id": "UFPR05/Sunny/2013-03-02/2013-03-02_09_55_04",
+      "source_image": "UFPR05/Sunny/2013-03-02/2013-03-02_09_55_04.jpg",
+      "figure": "yolo_hybrid/UFPR05/sunny/error/108d9349a79cb73b.jpg"
+    },
+    {
+      "method": "yolo_hybrid",
+      "camera": "UFPR05",
+      "weather": "sunny",
+      "category": "unknown_only",
+      "sample_id": "UFPR05/Sunny/2013-02-24/2013-02-24_06_30_00",
+      "source_image": "UFPR05/Sunny/2013-02-24/2013-02-24_06_30_00.jpg",
+      "figure": "yolo_hybrid/UFPR05/sunny/unknown_only/60ba2ec55af7051f.jpg"
+    },
+    {
+      "method": "yolo_fullframe_highres",
+      "camera": "PUCPR",
+      "weather": "overcast",
+      "category": "correct",
+      "sample_id": "PUCPR/Cloudy/2012-10-12/2012-10-12_09_12_38",
+      "source_image": "PUCPR/Cloudy/2012-10-12/2012-10-12_09_12_38.jpg",
+      "figure": "yolo_fullframe_highres/PUCPR/overcast/correct/db1176889de09da7.jpg"
+    },
+    {
+      "method": "yolo_fullframe_highres",
+      "camera": "PUCPR",
+      "weather": "overcast",
+      "category": "unknown_only",
+      "sample_id": "PUCPR/Cloudy/2012-10-12/2012-10-12_06_02_29",
+      "source_image": "PUCPR/Cloudy/2012-10-12/2012-10-12_06_02_29.jpg",
+      "figure": "yolo_fullframe_highres/PUCPR/overcast/unknown_only/44a0a03a365da54e.jpg"
+    },
+    {
+      "method": "yolo_fullframe_highres",
+      "camera": "PUCPR",
+      "weather": "rainy",
+      "category": "error",
+      "sample_id": "PUCPR/Rainy/2012-10-25/2012-10-25_08_48_20",
+      "source_image": "PUCPR/Rainy/2012-10-25/2012-10-25_08_48_20.jpg",
+      "figure": "yolo_fullframe_highres/PUCPR/rainy/error/b14e190af41e5315.jpg"
+    },
+    {
+      "method": "yolo_fullframe_highres",
+      "camera": "PUCPR",
+      "weather": "sunny",
+      "category": "correct",
+      "sample_id": "PUCPR/Sunny/2012-10-29/2012-10-29_06_42_53",
+      "source_image": "PUCPR/Sunny/2012-10-29/2012-10-29_06_42_53.jpg",
+      "figure": "yolo_fullframe_highres/PUCPR/sunny/correct/a5dbe6bcbce06440.jpg"
+    },
+    {
+      "method": "yolo_fullframe_highres",
+      "camera": "PUCPR",
+      "weather": "sunny",
+      "category": "error",
+      "sample_id": "PUCPR/Sunny/2012-09-11/2012-09-11_15_43_35",
+      "source_image": "PUCPR/Sunny/2012-09-11/2012-09-11_15_43_35.jpg",
+      "figure": "yolo_fullframe_highres/PUCPR/sunny/error/23d3c6719d0d3818.jpg"
+    },
+    {
+      "method": "yolo_fullframe_highres",
+      "camera": "PUCPR",
+      "weather": "sunny",
+      "category": "unknown_only",
+      "sample_id": "PUCPR/Sunny/2012-10-29/2012-10-29_07_27_55",
+      "source_image": "PUCPR/Sunny/2012-10-29/2012-10-29_07_27_55.jpg",
+      "figure": "yolo_fullframe_highres/PUCPR/sunny/unknown_only/d68ddd5683e8d7b5.jpg"
+    },
+    {
+      "method": "yolo_fullframe_highres",
+      "camera": "UFPR04",
+      "weather": "overcast",
+      "category": "correct",
+      "sample_id": "UFPR04/Cloudy/2013-01-19/2013-01-19_11_45_07",
+      "source_image": "UFPR04/Cloudy/2013-01-19/2013-01-19_11_45_07.jpg",
+      "figure": "yolo_fullframe_highres/UFPR04/overcast/correct/8d0fe9a72389dae0.jpg"
+    },
+    {
+      "method": "yolo_fullframe_highres",
+      "camera": "UFPR04",
+      "weather": "overcast",
+      "category": "unknown_only",
+      "sample_id": "UFPR04/Cloudy/2013-01-19/2013-01-19_07_40_02",
+      "source_image": "UFPR04/Cloudy/2013-01-19/2013-01-19_07_40_02.jpg",
+      "figure": "yolo_fullframe_highres/UFPR04/overcast/unknown_only/26313adb4598443c.jpg"
+    },
+    {
+      "method": "yolo_fullframe_highres",
+      "camera": "UFPR04",
+      "weather": "rainy",
+      "category": "correct",
+      "sample_id": "UFPR04/Rainy/2012-12-26/2012-12-26_15_40_11",
+      "source_image": "UFPR04/Rainy/2012-12-26/2012-12-26_15_40_11.jpg",
+      "figure": "yolo_fullframe_highres/UFPR04/rainy/correct/f75d428eac05f30c.jpg"
+    },
+    {
+      "method": "yolo_fullframe_highres",
+      "camera": "UFPR04",
+      "weather": "rainy",
+      "category": "unknown_only",
+      "sample_id": "UFPR04/Rainy/2012-12-07/2012-12-07_17_07_25",
+      "source_image": "UFPR04/Rainy/2012-12-07/2012-12-07_17_07_25.jpg",
+      "figure": "yolo_fullframe_highres/UFPR04/rainy/unknown_only/a8f249d3f602ab89.jpg"
+    },
+    {
+      "method": "yolo_fullframe_highres",
+      "camera": "UFPR04",
+      "weather": "sunny",
+      "category": "correct",
+      "sample_id": "UFPR04/Sunny/2012-12-18/2012-12-18_15_45_11",
+      "source_image": "UFPR04/Sunny/2012-12-18/2012-12-18_15_45_11.jpg",
+      "figure": "yolo_fullframe_highres/UFPR04/sunny/correct/fdb04644a0a47019.jpg"
+    },
+    {
+      "method": "yolo_fullframe_highres",
+      "camera": "UFPR04",
+      "weather": "sunny",
+      "category": "error",
+      "sample_id": "UFPR04/Sunny/2012-12-07/2012-12-07_18_57_27",
+      "source_image": "UFPR04/Sunny/2012-12-07/2012-12-07_18_57_27.jpg",
+      "figure": "yolo_fullframe_highres/UFPR04/sunny/error/a432bf41d6e52d3a.jpg"
+    },
+    {
+      "method": "yolo_fullframe_highres",
+      "camera": "UFPR04",
+      "weather": "sunny",
+      "category": "unknown_only",
+      "sample_id": "UFPR04/Sunny/2012-12-07/2012-12-07_17_32_25",
+      "source_image": "UFPR04/Sunny/2012-12-07/2012-12-07_17_32_25.jpg",
+      "figure": "yolo_fullframe_highres/UFPR04/sunny/unknown_only/59a3fd7abc81d7cc.jpg"
+    },
+    {
+      "method": "yolo_fullframe_highres",
+      "camera": "UFPR05",
+      "weather": "overcast",
+      "category": "correct",
+      "sample_id": "UFPR05/Cloudy/2013-02-26/2013-02-26_13_29_34",
+      "source_image": "UFPR05/Cloudy/2013-02-26/2013-02-26_13_29_34.jpg",
+      "figure": "yolo_fullframe_highres/UFPR05/overcast/correct/0dfce4dc0491b3d5.jpg"
+    },
+    {
+      "method": "yolo_fullframe_highres",
+      "camera": "UFPR05",
+      "weather": "overcast",
+      "category": "error",
+      "sample_id": "UFPR05/Cloudy/2013-04-14/2013-04-14_08_25_02",
+      "source_image": "UFPR05/Cloudy/2013-04-14/2013-04-14_08_25_02.jpg",
+      "figure": "yolo_fullframe_highres/UFPR05/overcast/error/ee5fbe79dd6cab93.jpg"
+    },
+    {
+      "method": "yolo_fullframe_highres",
+      "camera": "UFPR05",
+      "weather": "overcast",
+      "category": "unknown_only",
+      "sample_id": "UFPR05/Cloudy/2013-03-02/2013-03-02_06_10_00",
+      "source_image": "UFPR05/Cloudy/2013-03-02/2013-03-02_06_10_00.jpg",
+      "figure": "yolo_fullframe_highres/UFPR05/overcast/unknown_only/1c0e312acf70579d.jpg"
+    },
+    {
+      "method": "yolo_fullframe_highres",
+      "camera": "UFPR05",
+      "weather": "rainy",
+      "category": "correct",
+      "sample_id": "UFPR05/Rainy/2013-04-13/2013-04-13_06_50_01",
+      "source_image": "UFPR05/Rainy/2013-04-13/2013-04-13_06_50_01.jpg",
+      "figure": "yolo_fullframe_highres/UFPR05/rainy/correct/96f45b73a54c6d77.jpg"
+    },
+    {
+      "method": "yolo_fullframe_highres",
+      "camera": "UFPR05",
+      "weather": "rainy",
+      "category": "error",
+      "sample_id": "UFPR05/Rainy/2013-02-26/2013-02-26_13_19_33",
+      "source_image": "UFPR05/Rainy/2013-02-26/2013-02-26_13_19_33.jpg",
+      "figure": "yolo_fullframe_highres/UFPR05/rainy/error/37c8fcdb9c73f7ce.jpg"
+    },
+    {
+      "method": "yolo_fullframe_highres",
+      "camera": "UFPR05",
+      "weather": "rainy",
+      "category": "unknown_only",
+      "sample_id": "UFPR05/Rainy/2013-02-26/2013-02-26_13_04_33",
+      "source_image": "UFPR05/Rainy/2013-02-26/2013-02-26_13_04_33.jpg",
+      "figure": "yolo_fullframe_highres/UFPR05/rainy/unknown_only/09a03cf7b715c8ee.jpg"
+    },
+    {
+      "method": "yolo_fullframe_highres",
+      "camera": "UFPR05",
+      "weather": "sunny",
+      "category": "correct",
+      "sample_id": "UFPR05/Sunny/2013-02-26/2013-02-26_15_09_35",
+      "source_image": "UFPR05/Sunny/2013-02-26/2013-02-26_15_09_35.jpg",
+      "figure": "yolo_fullframe_highres/UFPR05/sunny/correct/6de9c17c5aaaa164.jpg"
+    },
+    {
+      "method": "yolo_fullframe_highres",
+      "camera": "UFPR05",
+      "weather": "sunny",
+      "category": "error",
+      "sample_id": "UFPR05/Sunny/2013-03-02/2013-03-02_09_55_04",
+      "source_image": "UFPR05/Sunny/2013-03-02/2013-03-02_09_55_04.jpg",
+      "figure": "yolo_fullframe_highres/UFPR05/sunny/error/108d9349a79cb73b.jpg"
+    },
+    {
+      "method": "yolo_fullframe_highres",
+      "camera": "UFPR05",
+      "weather": "sunny",
+      "category": "unknown_only",
+      "sample_id": "UFPR05/Sunny/2013-02-24/2013-02-24_06_30_00",
+      "source_image": "UFPR05/Sunny/2013-02-24/2013-02-24_06_30_00.jpg",
+      "figure": "yolo_fullframe_highres/UFPR05/sunny/unknown_only/60ba2ec55af7051f.jpg"
+    }
+  ]
+}
