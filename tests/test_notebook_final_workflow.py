@@ -17,7 +17,7 @@ class UnifiedNotebookTests(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)
-        notebook = json.loads((ROOT / "notebooks/01_pklot_run_all.ipynb").read_text())
+        notebook = json.loads((ROOT / "notebooks/01_pklot_run_all.ipynb").read_text(encoding="utf-8"))
         self.cells = {c.get("id"): "".join(c["source"]) for c in notebook["cells"]}
         self.env = {}
         exec(self.cells["environment-imports"], self.env)
@@ -55,7 +55,7 @@ class UnifiedNotebookTests(unittest.TestCase):
             with patch("urllib.request.urlopen", side_effect=AssertionError("must not download")):
                 exec(self.cells["pklot-3"], self.env)
         self.assertEqual(self.env["parking"].VALUE, 456)
-        self.assertEqual(source.read_text(), "VALUE = 456\n")
+        self.assertEqual(source.read_text(encoding="utf-8"), "VALUE = 456\n")
 
     def test_local_split_reused_without_fetching(self):
         split = self.root / "data/manifests/pklot_v1"

@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "split": "test",
+  "protocol": "within_camera",
+  "complete": true,
+  "source_run": "outputs/final_test_v1",
+  "source_evidence_manifest_sha256": "5284bde5eb6f49228b92b3eb1d75e23cf71b58fba8362df8e0902681b8fee0c7",
+  "source_artifacts_timestamp": "2026-11-11T20:28:39.852340+07:00",
+  "verified_on": "2026-11-16",
+  "test_frames": 270,
+  "test_slots_per_method": 15120,
+  "methods": [
+    "hog_svm",
+    "yolo_fullframe",
+    "yolo_hybrid",
+    "yolo_fullframe_highres"
+  ],
+  "validation_lock_sha256": "931ebc8a916c7e00fe6c5c1206a6bb4e3e5574769a8ba0f2859e3558ad2b972a",
+  "engine_sha256": "698336db95e47902280d7438d7bdcd7b8c4dd1ad0b404c9a7f137e87a534a02a",
+  "checkpoint_sha256": "0ebbc80d4a7680d14987a577cd21342b65ecfd94632bd9a8da63ae6417644ee1",
+  "selected_on": "val",
+  "no_test_parameter_selection": true,
+  "recorded_execution_environment": {
+    "python": "3.14.7",
+    "torch": "2.15.0+cpu",
+    "opencv": "4.14.0",
+    "device": "cpu"
+  },
+  "legacy_test_previously_observed": true,
+  "example_images": 88,
+  "publication_changes": "Text line endings normalized to LF for cross-platform Git checksums. No predictions, labels, numeric metrics, timings or image bytes changed. Existing completed run copied; no new inference or training."
+}

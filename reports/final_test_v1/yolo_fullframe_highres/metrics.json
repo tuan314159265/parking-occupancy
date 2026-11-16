@@ -1,0 +1,1293 @@
+{
+  "schema_version": 1,
+  "method": "yolo_fullframe_highres",
+  "threshold": 0.5,
+  "missing_policy": "error",
+  "metadata": {
+    "split": "test",
+    "timing_scope": "complete original-image pipeline",
+    "geometry_policy": "unknown",
+    "protocol": "within_camera",
+    "complete": true,
+    "device": "cpu",
+    "validation_lock_sha256": "931ebc8a916c7e00fe6c5c1206a6bb4e3e5574769a8ba0f2859e3558ad2b972a",
+    "selected_on": "val",
+    "no_test_parameter_selection": true,
+    "execution_environment": {
+      "python": "3.14.7",
+      "torch": "2.15.0+cpu",
+      "opencv": "4.14.0",
+      "device": "cpu"
+    }
+  },
+  "overall": {
+    "slots": 15120,
+    "covered_slots": 13540,
+    "unknown_slots": 1580,
+    "missing_predictions": 0,
+    "occupied_support": 4946,
+    "vacant_support": 10174,
+    "tp": 2249,
+    "tn": 9071,
+    "fp": 3,
+    "fn": 2217,
+    "unknown_occupied": 480,
+    "unknown_vacant": 1100,
+    "coverage": 0.8955026455026455,
+    "accuracy": 0.7486772486772487,
+    "precision": 0.9986678507992895,
+    "recall": 0.4547108774767489,
+    "f1": 0.6248958043901084,
+    "false_vacancy_rate": 0.44824100283057017,
+    "reported_vacancy_error_rate": 0.1964032600992204,
+    "covered_only": {
+      "accuracy": 0.8360413589364845,
+      "precision": 0.9986678507992895,
+      "recall": 0.5035826242722794,
+      "f1": 0.6695445072938374
+    },
+    "confusion_matrix": {
+      "true_labels": [
+        "vacant",
+        "occupied"
+      ],
+      "predicted_labels": [
+        "vacant",
+        "occupied",
+        "unknown"
+      ],
+      "values": [
+        [
+          9071,
+          3,
+          1100
+        ],
+        [
+          2217,
+          2249,
+          480
+        ]
+      ]
+    },
+    "confusion_matrix_covered": [
+      [
+        9071,
+        3
+      ],
+      [
+        2217,
+        2249
+      ]
+    ],
+    "frames": 270,
+    "mae_vacant_count": 11.562962962962963,
+    "mae_occupied_count": 9.985185185185186,
+    "complete_frame_coverage": 0.4148148148148148,
+    "timing": {
+      "measured_frames": 270,
+      "total_frames": 270,
+      "coverage": 1.0,
+      "missing_sample_ids": [],
+      "preprocess_ms_mean": 91.47891014081661,
+      "model_ms_mean": 282.3837514665852,
+      "postprocess_ms_mean": 3.9767315888672816,
+      "total_ms_mean": 377.8915499297404,
+      "total_ms_p50": 381.77759800237254,
+      "total_ms_p95": 464.026487200681,
+      "total_ms_sum": 102030.71848102991,
+      "inference_calls_sum": 270,
+      "inference_calls_mean": 1.0
+    }
+  },
+  "by_camera": {
+    "PUCPR": {
+      "slots": 9000,
+      "covered_slots": 7602,
+      "unknown_slots": 1398,
+      "missing_predictions": 0,
+      "occupied_support": 3597,
+      "vacant_support": 5403,
+      "tp": 923,
+      "tn": 4472,
+      "fp": 1,
+      "fn": 2206,
+      "unknown_occupied": 468,
+      "unknown_vacant": 930,
+      "coverage": 0.8446666666666667,
+      "accuracy": 0.5994444444444444,
+      "precision": 0.9989177489177489,
+      "recall": 0.25660272449263277,
+      "f1": 0.4083167440831674,
+      "false_vacancy_rate": 0.6132888518209619,
+      "reported_vacancy_error_rate": 0.3303384246780473,
+      "covered_only": {
+        "accuracy": 0.7096816627203367,
+        "precision": 0.9989177489177489,
+        "recall": 0.29498242249920104,
+        "f1": 0.45546508758943993
+      },
+      "confusion_matrix": {
+        "true_labels": [
+          "vacant",
+          "occupied"
+        ],
+        "predicted_labels": [
+          "vacant",
+          "occupied",
+          "unknown"
+        ],
+        "values": [
+          [
+            4472,
+            1,
+            930
+          ],
+          [
+            2206,
+            923,
+            468
+          ]
+        ]
+      },
+      "confusion_matrix_covered": [
+        [
+          4472,
+          1
+        ],
+        [
+          2206,
+          923
+        ]
+      ],
+      "frames": 90,
+      "mae_vacant_count": 32.766666666666666,
+      "mae_occupied_count": 29.7,
+      "complete_frame_coverage": 0.25555555555555554,
+      "timing": {
+        "measured_frames": 90,
+        "total_frames": 90,
+        "coverage": 1.0,
+        "missing_sample_ids": [],
+        "preprocess_ms_mean": 120.60061656658137,
+        "model_ms_mean": 188.85870423315887,
+        "postprocess_ms_mean": 7.53156028881171,
+        "total_ms_mean": 317.04491437772555,
+        "total_ms_p50": 305.0828730010835,
+        "total_ms_p95": 369.27428380095074,
+        "total_ms_sum": 28534.0422939953,
+        "inference_calls_sum": 90,
+        "inference_calls_mean": 1.0
+      }
+    },
+    "UFPR04": {
+      "slots": 2520,
+      "covered_slots": 2405,
+      "unknown_slots": 115,
+      "missing_predictions": 0,
+      "occupied_support": 417,
+      "vacant_support": 2103,
+      "tp": 405,
+      "tn": 1995,
+      "fp": 2,
+      "fn": 3,
+      "unknown_occupied": 9,
+      "unknown_vacant": 106,
+      "coverage": 0.9543650793650794,
+      "accuracy": 0.9523809523809523,
+      "precision": 0.995085995085995,
+      "recall": 0.9712230215827338,
+      "f1": 0.9830097087378641,
+      "false_vacancy_rate": 0.007194244604316547,
+      "reported_vacancy_error_rate": 0.0015015015015015015,
+      "covered_only": {
+        "accuracy": 0.997920997920998,
+        "precision": 0.995085995085995,
+        "recall": 0.9926470588235294,
+        "f1": 0.9938650306748467
+      },
+      "confusion_matrix": {
+        "true_labels": [
+          "vacant",
+          "occupied"
+        ],
+        "predicted_labels": [
+          "vacant",
+          "occupied",
+          "unknown"
+        ],
+        "values": [
+          [
+            1995,
+            2,
+            106
+          ],
+          [
+            3,
+            405,
+            9
+          ]
+        ]
+      },
+      "confusion_matrix_covered": [
+        [
+          1995,
+          2
+        ],
+        [
+          3,
+          405
+        ]
+      ],
+      "frames": 90,
+      "mae_vacant_count": 1.211111111111111,
+      "mae_occupied_count": 0.13333333333333333,
+      "complete_frame_coverage": 0.3111111111111111,
+      "timing": {
+        "measured_frames": 90,
+        "total_frames": 90,
+        "coverage": 1.0,
+        "missing_sample_ids": [],
+        "preprocess_ms_mean": 74.01868813342136,
+        "model_ms_mean": 342.58479125544704,
+        "postprocess_ms_mean": 1.7819560222253332,
+        "total_ms_mean": 418.43860934467455,
+        "total_ms_p50": 411.12255150073906,
+        "total_ms_p95": 473.7760949012227,
+        "total_ms_sum": 37659.47484102071,
+        "inference_calls_sum": 90,
+        "inference_calls_mean": 1.0
+      }
+    },
+    "UFPR05": {
+      "slots": 3600,
+      "covered_slots": 3533,
+      "unknown_slots": 67,
+      "missing_predictions": 0,
+      "occupied_support": 932,
+      "vacant_support": 2668,
+      "tp": 921,
+      "tn": 2604,
+      "fp": 0,
+      "fn": 8,
+      "unknown_occupied": 3,
+      "unknown_vacant": 64,
+      "coverage": 0.9813888888888889,
+      "accuracy": 0.9791666666666666,
+      "precision": 1.0,
+      "recall": 0.9881974248927039,
+      "f1": 0.9940636805180788,
+      "false_vacancy_rate": 0.008583690987124463,
+      "reported_vacancy_error_rate": 0.0030627871362940277,
+      "covered_only": {
+        "accuracy": 0.9977356354373054,
+        "precision": 1.0,
+        "recall": 0.9913885898815931,
+        "f1": 0.9956756756756757
+      },
+      "confusion_matrix": {
+        "true_labels": [
+          "vacant",
+          "occupied"
+        ],
+        "predicted_labels": [
+          "vacant",
+          "occupied",
+          "unknown"
+        ],
+        "values": [
+          [
+            2604,
+            0,
+            64
+          ],
+          [
+            8,
+            921,
+            3
+          ]
+        ]
+      },
+      "confusion_matrix_covered": [
+        [
+          2604,
+          0
+        ],
+        [
+          8,
+          921
+        ]
+      ],
+      "frames": 90,
+      "mae_vacant_count": 0.7111111111111111,
+      "mae_occupied_count": 0.12222222222222222,
+      "complete_frame_coverage": 0.6777777777777778,
+      "timing": {
+        "measured_frames": 90,
+        "total_frames": 90,
+        "coverage": 1.0,
+        "missing_sample_ids": [],
+        "preprocess_ms_mean": 79.8174257224471,
+        "model_ms_mean": 315.70775891114965,
+        "postprocess_ms_mean": 2.6166784555648013,
+        "total_ms_mean": 398.1911260668211,
+        "total_ms_p50": 386.29717950061604,
+        "total_ms_p95": 464.23248749961203,
+        "total_ms_sum": 35837.2013460139,
+        "inference_calls_sum": 90,
+        "inference_calls_mean": 1.0
+      }
+    }
+  },
+  "by_weather": {
+    "overcast": {
+      "slots": 5040,
+      "covered_slots": 4495,
+      "unknown_slots": 545,
+      "missing_predictions": 0,
+      "occupied_support": 441,
+      "vacant_support": 4599,
+      "tp": 439,
+      "tn": 4055,
+      "fp": 0,
+      "fn": 1,
+      "unknown_occupied": 1,
+      "unknown_vacant": 544,
+      "coverage": 0.8918650793650794,
+      "accuracy": 0.8916666666666667,
+      "precision": 1.0,
+      "recall": 0.9954648526077098,
+      "f1": 0.9977272727272727,
+      "false_vacancy_rate": 0.0022675736961451248,
+      "reported_vacancy_error_rate": 0.0002465483234714004,
+      "covered_only": {
+        "accuracy": 0.9997775305895439,
+        "precision": 1.0,
+        "recall": 0.9977272727272727,
+        "f1": 0.9988623435722411
+      },
+      "confusion_matrix": {
+        "true_labels": [
+          "vacant",
+          "occupied"
+        ],
+        "predicted_labels": [
+          "vacant",
+          "occupied",
+          "unknown"
+        ],
+        "values": [
+          [
+            4055,
+            0,
+            544
+          ],
+          [
+            1,
+            439,
+            1
+          ]
+        ]
+      },
+      "confusion_matrix_covered": [
+        [
+          4055,
+          0
+        ],
+        [
+          1,
+          439
+        ]
+      ],
+      "frames": 90,
+      "mae_vacant_count": 6.055555555555555,
+      "mae_occupied_count": 0.022222222222222223,
+      "complete_frame_coverage": 0.5333333333333333,
+      "timing": {
+        "measured_frames": 90,
+        "total_frames": 90,
+        "coverage": 1.0,
+        "missing_sample_ids": [],
+        "preprocess_ms_mean": 93.79597377798443,
+        "model_ms_mean": 287.06637165552013,
+        "postprocess_ms_mean": 2.2369203443102177,
+        "total_ms_mean": 383.15032542232075,
+        "total_ms_p50": 389.0360720015451,
+        "total_ms_p95": 477.8582020000612,
+        "total_ms_sum": 34483.52928800887,
+        "inference_calls_sum": 90,
+        "inference_calls_mean": 1.0
+      }
+    },
+    "rainy": {
+      "slots": 5040,
+      "covered_slots": 4754,
+      "unknown_slots": 286,
+      "missing_predictions": 0,
+      "occupied_support": 2454,
+      "vacant_support": 2586,
+      "tp": 785,
+      "tn": 2533,
+      "fp": 0,
+      "fn": 1436,
+      "unknown_occupied": 233,
+      "unknown_vacant": 53,
+      "coverage": 0.9432539682539682,
+      "accuracy": 0.6583333333333333,
+      "precision": 1.0,
+      "recall": 0.31988590057049715,
+      "f1": 0.48471750540290215,
+      "false_vacancy_rate": 0.5851670741646292,
+      "reported_vacancy_error_rate": 0.3618039808515999,
+      "covered_only": {
+        "accuracy": 0.6979385780395456,
+        "precision": 1.0,
+        "recall": 0.3534443944169293,
+        "f1": 0.52228875582169
+      },
+      "confusion_matrix": {
+        "true_labels": [
+          "vacant",
+          "occupied"
+        ],
+        "predicted_labels": [
+          "vacant",
+          "occupied",
+          "unknown"
+        ],
+        "values": [
+          [
+            2533,
+            0,
+            53
+          ],
+          [
+            1436,
+            785,
+            233
+          ]
+        ]
+      },
+      "confusion_matrix_covered": [
+        [
+          2533,
+          0
+        ],
+        [
+          1436,
+          785
+        ]
+      ],
+      "frames": 90,
+      "mae_vacant_count": 15.766666666666667,
+      "mae_occupied_count": 18.544444444444444,
+      "complete_frame_coverage": 0.5111111111111111,
+      "timing": {
+        "measured_frames": 90,
+        "total_frames": 90,
+        "coverage": 1.0,
+        "missing_sample_ids": [],
+        "preprocess_ms_mean": 95.47098038904853,
+        "model_ms_mean": 286.8917795443849,
+        "postprocess_ms_mean": 4.783108711287948,
+        "total_ms_mean": 387.19871613349017,
+        "total_ms_p50": 381.77759800237254,
+        "total_ms_p95": 473.7760949012227,
+        "total_ms_sum": 34847.884452014114,
+        "inference_calls_sum": 90,
+        "inference_calls_mean": 1.0
+      }
+    },
+    "sunny": {
+      "slots": 5040,
+      "covered_slots": 4291,
+      "unknown_slots": 749,
+      "missing_predictions": 0,
+      "occupied_support": 2051,
+      "vacant_support": 2989,
+      "tp": 1025,
+      "tn": 2483,
+      "fp": 3,
+      "fn": 780,
+      "unknown_occupied": 246,
+      "unknown_vacant": 503,
+      "coverage": 0.8513888888888889,
+      "accuracy": 0.696031746031746,
+      "precision": 0.9970817120622568,
+      "recall": 0.499756216479766,
+      "f1": 0.6658005846053914,
+      "false_vacancy_rate": 0.3803022915650902,
+      "reported_vacancy_error_rate": 0.23904382470119523,
+      "covered_only": {
+        "accuracy": 0.8175250524353298,
+        "precision": 0.9970817120622568,
+        "recall": 0.5678670360110804,
+        "f1": 0.7236145428873986
+      },
+      "confusion_matrix": {
+        "true_labels": [
+          "vacant",
+          "occupied"
+        ],
+        "predicted_labels": [
+          "vacant",
+          "occupied",
+          "unknown"
+        ],
+        "values": [
+          [
+            2483,
+            3,
+            503
+          ],
+          [
+            780,
+            1025,
+            246
+          ]
+        ]
+      },
+      "confusion_matrix_covered": [
+        [
+          2483,
+          3
+        ],
+        [
+          780,
+          1025
+        ]
+      ],
+      "frames": 90,
+      "mae_vacant_count": 12.866666666666667,
+      "mae_occupied_count": 11.38888888888889,
+      "complete_frame_coverage": 0.2,
+      "timing": {
+        "measured_frames": 90,
+        "total_frames": 90,
+        "coverage": 1.0,
+        "missing_sample_ids": [],
+        "preprocess_ms_mean": 85.16977625541686,
+        "model_ms_mean": 273.19310319985055,
+        "postprocess_ms_mean": 4.910165711003679,
+        "total_ms_mean": 363.3256082334103,
+        "total_ms_p50": 377.76863950057304,
+        "total_ms_p95": 446.3286249017983,
+        "total_ms_sum": 32699.304741006927,
+        "inference_calls_sum": 90,
+        "inference_calls_mean": 1.0
+      }
+    }
+  },
+  "by_camera_weather": {
+    "PUCPR/overcast": {
+      "slots": 3000,
+      "covered_slots": 2502,
+      "unknown_slots": 498,
+      "missing_predictions": 0,
+      "occupied_support": 6,
+      "vacant_support": 2994,
+      "tp": 6,
+      "tn": 2496,
+      "fp": 0,
+      "fn": 0,
+      "unknown_occupied": 0,
+      "unknown_vacant": 498,
+      "coverage": 0.834,
+      "accuracy": 0.834,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "false_vacancy_rate": 0.0,
+      "reported_vacancy_error_rate": 0.0,
+      "covered_only": {
+        "accuracy": 1.0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      },
+      "confusion_matrix": {
+        "true_labels": [
+          "vacant",
+          "occupied"
+        ],
+        "predicted_labels": [
+          "vacant",
+          "occupied",
+          "unknown"
+        ],
+        "values": [
+          [
+            2496,
+            0,
+            498
+          ],
+          [
+            0,
+            6,
+            0
+          ]
+        ]
+      },
+      "confusion_matrix_covered": [
+        [
+          2496,
+          0
+        ],
+        [
+          0,
+          6
+        ]
+      ],
+      "frames": 30,
+      "mae_vacant_count": 16.6,
+      "mae_occupied_count": 0.0,
+      "complete_frame_coverage": 0.7,
+      "timing": {
+        "measured_frames": 30,
+        "total_frames": 30,
+        "coverage": 1.0,
+        "missing_sample_ids": [],
+        "preprocess_ms_mean": 122.59477953327102,
+        "model_ms_mean": 197.01149383326992,
+        "postprocess_ms_mean": 2.187695666361833,
+        "total_ms_mean": 321.84633176669496,
+        "total_ms_p50": 294.5096105013363,
+        "total_ms_p95": 346.3775830989107,
+        "total_ms_sum": 9655.38995300085,
+        "inference_calls_sum": 30,
+        "inference_calls_mean": 1.0
+      }
+    },
+    "PUCPR/rainy": {
+      "slots": 3000,
+      "covered_slots": 2736,
+      "unknown_slots": 264,
+      "missing_predictions": 0,
+      "occupied_support": 2322,
+      "vacant_support": 678,
+      "tp": 658,
+      "tn": 643,
+      "fp": 0,
+      "fn": 1435,
+      "unknown_occupied": 229,
+      "unknown_vacant": 35,
+      "coverage": 0.912,
+      "accuracy": 0.43366666666666664,
+      "precision": 1.0,
+      "recall": 0.2833763996554694,
+      "f1": 0.44161073825503355,
+      "false_vacancy_rate": 0.6180017226528854,
+      "reported_vacancy_error_rate": 0.690567853705486,
+      "covered_only": {
+        "accuracy": 0.4755116959064328,
+        "precision": 1.0,
+        "recall": 0.31438127090301005,
+        "f1": 0.47837150127226463
+      },
+      "confusion_matrix": {
+        "true_labels": [
+          "vacant",
+          "occupied"
+        ],
+        "predicted_labels": [
+          "vacant",
+          "occupied",
+          "unknown"
+        ],
+        "values": [
+          [
+            643,
+            0,
+            35
+          ],
+          [
+            1435,
+            658,
+            229
+          ]
+        ]
+      },
+      "confusion_matrix_covered": [
+        [
+          643,
+          0
+        ],
+        [
+          1435,
+          658
+        ]
+      ],
+      "frames": 30,
+      "mae_vacant_count": 46.666666666666664,
+      "mae_occupied_count": 55.46666666666667,
+      "complete_frame_coverage": 0.0,
+      "timing": {
+        "measured_frames": 30,
+        "total_frames": 30,
+        "coverage": 1.0,
+        "missing_sample_ids": [],
+        "preprocess_ms_mean": 137.87358920005013,
+        "model_ms_mean": 186.08045726638616,
+        "postprocess_ms_mean": 12.223655900136995,
+        "total_ms_mean": 336.2327277332952,
+        "total_ms_p50": 334.8881620004249,
+        "total_ms_p95": 381.5985882007226,
+        "total_ms_sum": 10086.981831998855,
+        "inference_calls_sum": 30,
+        "inference_calls_mean": 1.0
+      }
+    },
+    "PUCPR/sunny": {
+      "slots": 3000,
+      "covered_slots": 2364,
+      "unknown_slots": 636,
+      "missing_predictions": 0,
+      "occupied_support": 1269,
+      "vacant_support": 1731,
+      "tp": 259,
+      "tn": 1333,
+      "fp": 1,
+      "fn": 771,
+      "unknown_occupied": 239,
+      "unknown_vacant": 397,
+      "coverage": 0.788,
+      "accuracy": 0.5306666666666666,
+      "precision": 0.9961538461538462,
+      "recall": 0.2040977147360126,
+      "f1": 0.33878351863963374,
+      "false_vacancy_rate": 0.607565011820331,
+      "reported_vacancy_error_rate": 0.3664448669201521,
+      "covered_only": {
+        "accuracy": 0.6734348561759729,
+        "precision": 0.9961538461538462,
+        "recall": 0.25145631067961166,
+        "f1": 0.4015503875968992
+      },
+      "confusion_matrix": {
+        "true_labels": [
+          "vacant",
+          "occupied"
+        ],
+        "predicted_labels": [
+          "vacant",
+          "occupied",
+          "unknown"
+        ],
+        "values": [
+          [
+            1333,
+            1,
+            397
+          ],
+          [
+            771,
+            259,
+            239
+          ]
+        ]
+      },
+      "confusion_matrix_covered": [
+        [
+          1333,
+          1
+        ],
+        [
+          771,
+          259
+        ]
+      ],
+      "frames": 30,
+      "mae_vacant_count": 35.03333333333333,
+      "mae_occupied_count": 33.63333333333333,
+      "complete_frame_coverage": 0.06666666666666667,
+      "timing": {
+        "measured_frames": 30,
+        "total_frames": 30,
+        "coverage": 1.0,
+        "missing_sample_ids": [],
+        "preprocess_ms_mean": 101.33348096642294,
+        "model_ms_mean": 183.48416159982057,
+        "postprocess_ms_mean": 8.183329299936304,
+        "total_ms_mean": 293.05568363318645,
+        "total_ms_p50": 289.20775599908666,
+        "total_ms_p95": 347.13906190117996,
+        "total_ms_sum": 8791.670508995594,
+        "inference_calls_sum": 30,
+        "inference_calls_mean": 1.0
+      }
+    },
+    "UFPR04/overcast": {
+      "slots": 840,
+      "covered_slots": 802,
+      "unknown_slots": 38,
+      "missing_predictions": 0,
+      "occupied_support": 1,
+      "vacant_support": 839,
+      "tp": 1,
+      "tn": 801,
+      "fp": 0,
+      "fn": 0,
+      "unknown_occupied": 0,
+      "unknown_vacant": 38,
+      "coverage": 0.9547619047619048,
+      "accuracy": 0.9547619047619048,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "false_vacancy_rate": 0.0,
+      "reported_vacancy_error_rate": 0.0,
+      "covered_only": {
+        "accuracy": 1.0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      },
+      "confusion_matrix": {
+        "true_labels": [
+          "vacant",
+          "occupied"
+        ],
+        "predicted_labels": [
+          "vacant",
+          "occupied",
+          "unknown"
+        ],
+        "values": [
+          [
+            801,
+            0,
+            38
+          ],
+          [
+            0,
+            1,
+            0
+          ]
+        ]
+      },
+      "confusion_matrix_covered": [
+        [
+          801,
+          0
+        ],
+        [
+          0,
+          1
+        ]
+      ],
+      "frames": 30,
+      "mae_vacant_count": 1.2666666666666666,
+      "mae_occupied_count": 0.0,
+      "complete_frame_coverage": 0.16666666666666666,
+      "timing": {
+        "measured_frames": 30,
+        "total_frames": 30,
+        "coverage": 1.0,
+        "missing_sample_ids": [],
+        "preprocess_ms_mean": 72.52166303345196,
+        "model_ms_mean": 322.24355016648286,
+        "postprocess_ms_mean": 0.49737729993163765,
+        "total_ms_mean": 395.3086828999706,
+        "total_ms_p50": 395.66321600068477,
+        "total_ms_p95": 419.9834729988652,
+        "total_ms_sum": 11859.26048699912,
+        "inference_calls_sum": 30,
+        "inference_calls_mean": 1.0
+      }
+    },
+    "UFPR04/rainy": {
+      "slots": 840,
+      "covered_slots": 819,
+      "unknown_slots": 21,
+      "missing_predictions": 0,
+      "occupied_support": 39,
+      "vacant_support": 801,
+      "tp": 36,
+      "tn": 783,
+      "fp": 0,
+      "fn": 0,
+      "unknown_occupied": 3,
+      "unknown_vacant": 18,
+      "coverage": 0.975,
+      "accuracy": 0.975,
+      "precision": 1.0,
+      "recall": 0.9230769230769231,
+      "f1": 0.96,
+      "false_vacancy_rate": 0.0,
+      "reported_vacancy_error_rate": 0.0,
+      "covered_only": {
+        "accuracy": 1.0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      },
+      "confusion_matrix": {
+        "true_labels": [
+          "vacant",
+          "occupied"
+        ],
+        "predicted_labels": [
+          "vacant",
+          "occupied",
+          "unknown"
+        ],
+        "values": [
+          [
+            783,
+            0,
+            18
+          ],
+          [
+            0,
+            36,
+            3
+          ]
+        ]
+      },
+      "confusion_matrix_covered": [
+        [
+          783,
+          0
+        ],
+        [
+          0,
+          36
+        ]
+      ],
+      "frames": 30,
+      "mae_vacant_count": 0.6,
+      "mae_occupied_count": 0.1,
+      "complete_frame_coverage": 0.5666666666666667,
+      "timing": {
+        "measured_frames": 30,
+        "total_frames": 30,
+        "coverage": 1.0,
+        "missing_sample_ids": [],
+        "preprocess_ms_mean": 73.12409446676611,
+        "model_ms_mean": 370.70870126663067,
+        "postprocess_ms_mean": 0.8709964669833425,
+        "total_ms_mean": 444.7607438671791,
+        "total_ms_p50": 439.5963674996892,
+        "total_ms_p95": 502.4462018502163,
+        "total_ms_sum": 13342.822316015372,
+        "inference_calls_sum": 30,
+        "inference_calls_mean": 1.0
+      }
+    },
+    "UFPR04/sunny": {
+      "slots": 840,
+      "covered_slots": 784,
+      "unknown_slots": 56,
+      "missing_predictions": 0,
+      "occupied_support": 377,
+      "vacant_support": 463,
+      "tp": 368,
+      "tn": 411,
+      "fp": 2,
+      "fn": 3,
+      "unknown_occupied": 6,
+      "unknown_vacant": 50,
+      "coverage": 0.9333333333333333,
+      "accuracy": 0.9273809523809524,
+      "precision": 0.9945945945945946,
+      "recall": 0.9761273209549072,
+      "f1": 0.9852744310575636,
+      "false_vacancy_rate": 0.007957559681697613,
+      "reported_vacancy_error_rate": 0.007246376811594203,
+      "covered_only": {
+        "accuracy": 0.9936224489795918,
+        "precision": 0.9945945945945946,
+        "recall": 0.9919137466307277,
+        "f1": 0.9932523616734144
+      },
+      "confusion_matrix": {
+        "true_labels": [
+          "vacant",
+          "occupied"
+        ],
+        "predicted_labels": [
+          "vacant",
+          "occupied",
+          "unknown"
+        ],
+        "values": [
+          [
+            411,
+            2,
+            50
+          ],
+          [
+            3,
+            368,
+            6
+          ]
+        ]
+      },
+      "confusion_matrix_covered": [
+        [
+          411,
+          2
+        ],
+        [
+          3,
+          368
+        ]
+      ],
+      "frames": 30,
+      "mae_vacant_count": 1.7666666666666666,
+      "mae_occupied_count": 0.3,
+      "complete_frame_coverage": 0.2,
+      "timing": {
+        "measured_frames": 30,
+        "total_frames": 30,
+        "coverage": 1.0,
+        "missing_sample_ids": [],
+        "preprocess_ms_mean": 76.41030690004602,
+        "model_ms_mean": 334.8021223332277,
+        "postprocess_ms_mean": 3.9774942997610196,
+        "total_ms_mean": 415.246401266874,
+        "total_ms_p50": 413.34275900044304,
+        "total_ms_p95": 451.2534585499452,
+        "total_ms_sum": 12457.392038006219,
+        "inference_calls_sum": 30,
+        "inference_calls_mean": 1.0
+      }
+    },
+    "UFPR05/overcast": {
+      "slots": 1200,
+      "covered_slots": 1191,
+      "unknown_slots": 9,
+      "missing_predictions": 0,
+      "occupied_support": 434,
+      "vacant_support": 766,
+      "tp": 432,
+      "tn": 758,
+      "fp": 0,
+      "fn": 1,
+      "unknown_occupied": 1,
+      "unknown_vacant": 8,
+      "coverage": 0.9925,
+      "accuracy": 0.9916666666666667,
+      "precision": 1.0,
+      "recall": 0.9953917050691244,
+      "f1": 0.9976905311778291,
+      "false_vacancy_rate": 0.002304147465437788,
+      "reported_vacancy_error_rate": 0.0013175230566534915,
+      "covered_only": {
+        "accuracy": 0.9991603694374476,
+        "precision": 1.0,
+        "recall": 0.9976905311778291,
+        "f1": 0.9988439306358381
+      },
+      "confusion_matrix": {
+        "true_labels": [
+          "vacant",
+          "occupied"
+        ],
+        "predicted_labels": [
+          "vacant",
+          "occupied",
+          "unknown"
+        ],
+        "values": [
+          [
+            758,
+            0,
+            8
+          ],
+          [
+            1,
+            432,
+            1
+          ]
+        ]
+      },
+      "confusion_matrix_covered": [
+        [
+          758,
+          0
+        ],
+        [
+          1,
+          432
+        ]
+      ],
+      "frames": 30,
+      "mae_vacant_count": 0.3,
+      "mae_occupied_count": 0.06666666666666667,
+      "complete_frame_coverage": 0.7333333333333333,
+      "timing": {
+        "measured_frames": 30,
+        "total_frames": 30,
+        "coverage": 1.0,
+        "missing_sample_ids": [],
+        "preprocess_ms_mean": 86.27147876723029,
+        "model_ms_mean": 341.9440709668076,
+        "postprocess_ms_mean": 4.025688066637183,
+        "total_ms_mean": 432.2959616002966,
+        "total_ms_p50": 424.4498564985406,
+        "total_ms_p95": 504.7256601515982,
+        "total_ms_sum": 12968.878848008899,
+        "inference_calls_sum": 30,
+        "inference_calls_mean": 1.0
+      }
+    },
+    "UFPR05/rainy": {
+      "slots": 1200,
+      "covered_slots": 1199,
+      "unknown_slots": 1,
+      "missing_predictions": 0,
+      "occupied_support": 93,
+      "vacant_support": 1107,
+      "tp": 91,
+      "tn": 1107,
+      "fp": 0,
+      "fn": 1,
+      "unknown_occupied": 1,
+      "unknown_vacant": 0,
+      "coverage": 0.9991666666666666,
+      "accuracy": 0.9983333333333333,
+      "precision": 1.0,
+      "recall": 0.978494623655914,
+      "f1": 0.9891304347826086,
+      "false_vacancy_rate": 0.010752688172043012,
+      "reported_vacancy_error_rate": 0.0009025270758122744,
+      "covered_only": {
+        "accuracy": 0.9991659716430359,
+        "precision": 1.0,
+        "recall": 0.9891304347826086,
+        "f1": 0.994535519125683
+      },
+      "confusion_matrix": {
+        "true_labels": [
+          "vacant",
+          "occupied"
+        ],
+        "predicted_labels": [
+          "vacant",
+          "occupied",
+          "unknown"
+        ],
+        "values": [
+          [
+            1107,
+            0,
+            0
+          ],
+          [
+            1,
+            91,
+            1
+          ]
+        ]
+      },
+      "confusion_matrix_covered": [
+        [
+          1107,
+          0
+        ],
+        [
+          1,
+          91
+        ]
+      ],
+      "frames": 30,
+      "mae_vacant_count": 0.03333333333333333,
+      "mae_occupied_count": 0.06666666666666667,
+      "complete_frame_coverage": 0.9666666666666667,
+      "timing": {
+        "measured_frames": 30,
+        "total_frames": 30,
+        "coverage": 1.0,
+        "missing_sample_ids": [],
+        "preprocess_ms_mean": 75.41525750032936,
+        "model_ms_mean": 303.8861801001379,
+        "postprocess_ms_mean": 1.2546737667435082,
+        "total_ms_mean": 380.60267679999623,
+        "total_ms_p50": 378.7994060003257,
+        "total_ms_p95": 410.1162328977807,
+        "total_ms_sum": 11418.080303999886,
+        "inference_calls_sum": 30,
+        "inference_calls_mean": 1.0
+      }
+    },
+    "UFPR05/sunny": {
+      "slots": 1200,
+      "covered_slots": 1143,
+      "unknown_slots": 57,
+      "missing_predictions": 0,
+      "occupied_support": 405,
+      "vacant_support": 795,
+      "tp": 398,
+      "tn": 739,
+      "fp": 0,
+      "fn": 6,
+      "unknown_occupied": 1,
+      "unknown_vacant": 56,
+      "coverage": 0.9525,
+      "accuracy": 0.9475,
+      "precision": 1.0,
+      "recall": 0.9827160493827161,
+      "f1": 0.9912826899128269,
+      "false_vacancy_rate": 0.014814814814814815,
+      "reported_vacancy_error_rate": 0.008053691275167786,
+      "covered_only": {
+        "accuracy": 0.994750656167979,
+        "precision": 1.0,
+        "recall": 0.9851485148514851,
+        "f1": 0.9925187032418953
+      },
+      "confusion_matrix": {
+        "true_labels": [
+          "vacant",
+          "occupied"
+        ],
+        "predicted_labels": [
+          "vacant",
+          "occupied",
+          "unknown"
+        ],
+        "values": [
+          [
+            739,
+            0,
+            56
+          ],
+          [
+            6,
+            398,
+            1
+          ]
+        ]
+      },
+      "confusion_matrix_covered": [
+        [
+          739,
+          0
+        ],
+        [
+          6,
+          398
+        ]
+      ],
+      "frames": 30,
+      "mae_vacant_count": 1.8,
+      "mae_occupied_count": 0.23333333333333334,
+      "complete_frame_coverage": 0.3333333333333333,
+      "timing": {
+        "measured_frames": 30,
+        "total_frames": 30,
+        "coverage": 1.0,
+        "missing_sample_ids": [],
+        "preprocess_ms_mean": 77.76554089978163,
+        "model_ms_mean": 301.2930256665034,
+        "postprocess_ms_mean": 2.5696735333137135,
+        "total_ms_mean": 381.67473980017047,
+        "total_ms_p50": 380.6675904979784,
+        "total_ms_p95": 404.1544124502252,
+        "total_ms_sum": 11450.242194005114,
+        "inference_calls_sum": 30,
+        "inference_calls_mean": 1.0
+      }
+    }
+  }
+}

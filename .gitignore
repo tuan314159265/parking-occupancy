@@ -1,15 +1,37 @@
+# Python / môi trường
 __pycache__/
+*.py[cod]
 *.egg-info/
 .venv/
+.venv*/
+.pytest_cache/
 .ipynb_checkpoints/
+
+# Dữ liệu PKLot (archive, ảnh, XML) — tải bằng `python parking_module.py prepare`
 data/raw/*
 !data/raw/.gitkeep
+*.tar.gz
+
+# Kết quả chạy, model đã huấn luyện, checkpoint và gói bàn giao
 outputs/*
 !outputs/.gitkeep
+models/
+*.pt
+*.joblib
+*.npy
+*.zip
 /splits/
+
+# LaTeX tạm
 *.aux
 *.log
 *.out
 
-.venv*/
-models/
+# Thông tin riêng / cấu hình máy
+.env
+.env.*
+*.key
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

@@ -17,7 +17,7 @@ class ProjectSplitTests(unittest.TestCase):
         self.base=Path(tmp.name)
         self.manifest=self.base/'inventory/valid_samples.jsonl'
         self.manifest.parent.mkdir()
-        self.config=json.loads(Path(__file__).resolve().parents[1].joinpath('configs/pklot_v1.json').read_text())
+        self.config=json.loads(Path(__file__).resolve().parents[1].joinpath('configs/pklot_v1.json').read_text(encoding="utf-8"))
         self.config['max_frames_per_camera_weather']={'train':2,'val':1,'test':1}
         self.config['day_assignment_trials']=16
         self.rows=[]
@@ -134,7 +134,7 @@ class ProjectSplitTests(unittest.TestCase):
         record=dict(sample_id=frame.sample_id,xml_path=frame.xml_path,
                     geometry_id=geometry_id,labels={'1':0})
         self.assertEqual(parking.read_project_frame(record,self.base/'dataset'),frame)
-        path.write_text(path.read_text().replace('occupied="0"','occupied="1"'))
+        path.write_text(path.read_text(encoding="utf-8").replace('occupied="0"','occupied="1"'))
         with self.assertRaisesRegex(ValueError,'differs from the frozen'):
             parking.read_project_frame(record,self.base/'dataset')
 

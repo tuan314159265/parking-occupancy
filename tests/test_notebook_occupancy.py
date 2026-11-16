@@ -47,7 +47,7 @@ class OccupancyNotebookTests(unittest.TestCase):
                               PROJECT_DATASET_VERSION='test', provenance={'sha256': 'test'},
                               FULLFRAME_DETECTOR=SimpleNamespace(config={'checkpoint': 'fake'}),
                               HYBRID_CONFIG={'tiling': {}}, TEST_FRAMES=None)
-        notebook = json.loads((REPO / 'notebooks/01_pklot_run_all.ipynb').read_text())
+        notebook = json.loads((REPO / 'notebooks/01_pklot_run_all.ipynb').read_text(encoding="utf-8"))
         self.cells = {c.get('id'): ''.join(c['source']) for c in notebook['cells']}
         self.addCleanup(plt.close, 'all')
 
@@ -78,8 +78,8 @@ class OccupancyNotebookTests(unittest.TestCase):
         self.execute('occupancy-code')
         self.execute('validation-code')
         directory = self.root / 'outputs/full/example/occupancy/validation'
-        frozen = json.loads((directory / 'frozen_config.json').read_text())
-        search = json.loads((directory / 'search.json').read_text())
+        frozen = json.loads((directory / 'frozen_config.json').read_text(encoding="utf-8"))
+        search = json.loads((directory / 'search.json').read_text(encoding="utf-8"))
         self.assertEqual(len(search), 18)
         winner = max(search, key=lambda row: (row['mean_f1'], row['mean_coverage'],
                                              -row['mean_mae_vacant_count']))

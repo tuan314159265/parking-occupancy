@@ -100,7 +100,7 @@ class ValidationTests(unittest.TestCase):
         self.assertEqual(sum(detector._pixels),640*1280)
 
     def test_validation_mode_skips_duplicate_training_and_default_never_runs_test(self):
-        notebook=json.loads(Path(__file__).resolve().parents[1].joinpath('notebooks/01_pklot_run_all.ipynb').read_text())
+        notebook=json.loads(Path(__file__).resolve().parents[1].joinpath('notebooks/01_pklot_run_all.ipynb').read_text(encoding="utf-8"))
         cells={c.get('id'):''.join(c['source']) for c in notebook['cells']}
         namespace=dict(VALIDATION_ONLY_MODE=True)
         for cell in ['hog-svm-code','full-frame-code','hybrid-code','occupancy-code','pipeline-code','validation-code','validation-geometry-code']:
@@ -138,7 +138,7 @@ class ValidationTests(unittest.TestCase):
             self.assertTrue(all(r['metadata']['split']=='test' and r['metadata']['no_test_parameter_selection'] for r in reports.values()))
 
     def test_plan_contains_bounded_grid_default_and_checkpoint_digest(self):
-        plan=json.loads(Path(__file__).resolve().parents[1].joinpath('configs/validation_v1.json').read_text())
+        plan=json.loads(Path(__file__).resolve().parents[1].joinpath('configs/validation_v1.json').read_text(encoding="utf-8"))
         self.assertEqual(len(plan['checkpoint']['sha256']),64)
         n=len(plan['hybrid']['padding'])*len(plan['hybrid']['overlap'])*len(plan['detector']['confidence'])*len(plan['matching']['lower_fraction'])*len(plan['matching']['min_overlap'])*len(plan['matching']['ambiguity_margin'])
         self.assertEqual(n,144)

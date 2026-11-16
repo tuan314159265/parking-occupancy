@@ -4,7 +4,9 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "parking-occupancy"
-version = "0.1.0"
+version = "1.0.0"
+description = "Parking-space occupancy on PKLot: HOG/SVM, YOLO11n full-frame and ROI-tiled hybrid"
+readme = "README.md"
 requires-python = ">=3.10"
 dependencies = ["Pillow>=10,<13", "numpy>=1.26,<3", "opencv-python-headless>=4.10,<5"]
 

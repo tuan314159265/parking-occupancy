@@ -30,7 +30,7 @@ class NotebookReuseTests(unittest.TestCase):
         xml.write_text(XML)
         Image.new('RGB', (10, 10)).save(xml.with_suffix('.jpg'))
         parking.audit(root, self.repo / 'outputs/full')
-        notebook = json.loads((REPO / 'notebooks/01_pklot_run_all.ipynb').read_text())
+        notebook = json.loads((REPO / 'notebooks/01_pklot_run_all.ipynb').read_text(encoding="utf-8"))
         self.cells = {c.get('id'): ''.join(c['source']) for c in notebook['cells']}
         self.namespace = dict(parking=parking, USE_GOOGLE_DRIVE=False,
                               DRIVE_PROJECT_DIR='parking-occupancy', SHARED_DATASET_DIR='',
@@ -68,7 +68,7 @@ class NotebookReuseTests(unittest.TestCase):
         self.assertEqual((self.repo / 'parking_module.py').read_bytes(), original)
         cache = self.repo / 'outputs/runtime'
         self.assertEqual((cache / 'parking_module.py').read_bytes(), download)
-        self.assertEqual(json.loads((cache / 'module_source.json').read_text())['ref'], 'branch')
+        self.assertEqual(json.loads((cache / 'module_source.json').read_text(encoding="utf-8"))['ref'], 'branch')
         self.assertFalse((self.repo / 'notebooks/parking_module.py').exists())
 
 
