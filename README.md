@@ -40,7 +40,7 @@ Task 13 đã hoàn tất ở lượt ngày **11/11/2026**: cùng 270 ảnh / 15.
 
 **Dùng cho task 17–18:** [báo cáo test và ảnh minh họa](reports/final_test_v1/README.md), [bảng tổng](reports/final_test_v1/tables/comparison.csv), [theo camera](reports/final_test_v1/tables/by_camera.csv), [theo thời tiết](reports/final_test_v1/tables/by_weather.csv), [timing từng giai đoạn](reports/final_test_v1/tables/timings_per_frame.csv). Thư mục báo cáo giữ đủ dự đoán, 88 ảnh minh họa, metadata và checksum.
 
-Đã xác minh đủ bốn phương pháp và metrics tính lại khớp dự đoán/timing; 127 file nguồn khớp manifest gốc. Các thời gian là CPU, không so trực tiếp GPU Colab.
+Đã xác minh đủ bốn phương pháp và metrics tính lại khớp dự đoán/timing; 127 file nguồn khớp manifest gốc. Các thời gian là CPU, không so trực tiếp GPU Colab. Lượt chạy lại trên Colab GPU cho dự đoán giống hệt (xem [reports/final_test_gpu_v1](reports/final_test_gpu_v1/README.md)). Khoảng tin cậy bootstrap theo (camera, ngày) nằm ở [bootstrap_ci.csv](reports/final_test_v1/tables/bootstrap_ci.csv): chỉ có 15 cụm nên khoảng rộng; chênh lệch hybrid − YOLO khớp pixel là +0.0268, khoảng [0.0038, 0.0397].
 
 ## Cấu trúc repository
 
@@ -49,11 +49,13 @@ parking_module.py          Toàn bộ mã xử lý (loader/audit, split, HOG, YO
 final_test_module.py       Các bước test cuối: kiểm tra khóa → chạy → bảng → ảnh minh họa → hash bằng chứng
 notebooks/01_pklot_run_all.ipynb   Notebook chính, chạy Run All trên Colab hoặc local
 scripts/run_final_test.py         CLI chạy test cuối (giống notebook mục 6.3)
+scripts/bootstrap_ci.py            Bootstrap theo ngày cho F1 (chỉ đọc dự đoán đã lưu)
 scripts/build_final_test_bundle.py  Đóng gói model/khóa để chuyển sang máy khác (không chứa dataset)
 configs/                   pklot_v1.json (split), validation_v1.json (plan tìm kiếm + checkpoint), default.json
 data/manifests/pklot_v1/   Split train/val/test và polygon ô đỗ đã khóa (có SHA256 trong split_lock.json)
 reports/validation_v1/     Kết quả validation, plan, khóa locked_config.json, hash
-reports/final_test_v1/     Test cuối: bảng, dự đoán, timing, 88 ảnh minh họa và hash
+reports/final_test_v1/     Test cuối (CPU): bảng, dự đoán, timing, 88 ảnh minh họa, hash, bootstrap_ci.csv
+reports/final_test_gpu_v1/  Lượt chạy lại trên Colab GPU: bảng, metrics, timing, hash (dự đoán giống lượt CPU)
 src/parking_occupancy/     Lớp tương thích cho `pip install -e .` (chuyển tiếp tới parking_module)
 tests/                     136 unit test (không cần dataset, model hay mạng)
 ```
