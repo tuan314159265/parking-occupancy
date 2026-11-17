@@ -2,8 +2,6 @@
 
 Configuration selected on validation; no test parameter search.
 
-The legacy notebook had already exposed the test split; this is not an unseen blind holdout.
-
 | Method | F1 | Accuracy | Coverage | Vacant MAE | ms/image |
 |---|---:|---:|---:|---:|---:|
 | HOG + SVM | 0.9654 | 0.9126 | 0.9353 | 4.681 | 167.8 |

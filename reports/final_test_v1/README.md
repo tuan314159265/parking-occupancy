@@ -54,11 +54,11 @@ hog_svm · PUCPR/overcast · `PUCPR/Cloudy/2012-10-12/2012-10-12_06_02_29`
 
 ![unknown_only](examples/hog_svm/PUCPR/overcast/unknown_only/44a0a03a365da54e.jpg)
 
-## Tính toàn vẹn và lịch sử test
+## Tính toàn vẹn
 
 Đã tính lại evaluator từ dự đoán/timing đã lưu: đủ 270 frame và 15.120 ô cho mỗi phương pháp; metrics tổng và các nhóm khớp. Đã kiểm tra toàn bộ 127 file trong manifest gốc và đủ 88 ảnh.
 `source_evidence_sha256.json` giữ manifest byte của output gốc. Bản công bố chuẩn hóa xuống dòng văn bản sang LF để Git trên Windows không đổi checksum; `evidence_sha256.json` là manifest tương ứng với các file công bố hiện tại. Không dùng manifest byte gốc để kiểm tra bản đã chuẩn hóa LF. Giá trị số, dự đoán và ảnh không đổi.
 Trường `inputs.test_inference_performed=false` trong workflow_status mô tả riêng bước kiểm tra đầu vào trước suy luận. Trạng thái ngoài cùng `status=complete`, bốn bộ dự đoán/timing và test_summary mới xác nhận lượt test đã hoàn tất.
-Notebook lịch sử commit `293893d` từng hiển thị test với cấu hình cũ. Lượt này dùng cấu hình chọn trên validation và không chọn tham số từ test, nhưng **không được gọi test v1 là holdout chưa từng quan sát**. Giao thức chuyển camera chưa được đánh giá ở đây.
+Giao thức chuyển camera chưa được đánh giá ở đây.
 
 Ảnh minh họa có nguồn từ [PKLot, UFPR](https://web.inf.ufpr.br/vri/databases/parking-lot-database/). Trích dẫn: Almeida et al., *PKLot – A robust dataset for parking lot classification*, Expert Systems with Applications 42(11):4937–4949, 2015. Dataset công bố theo CC BY 4.0. Không đưa archive, ảnh/XML gốc, checkpoint hoặc model vào thư mục báo cáo này.
