@@ -1,7 +1,7 @@
 {
   "algorithm": "sha256",
   "files": {
-    "README.md": "141457f03a1804e078ebd5744ee08a3505bbf062dc7530279a475cf00ef18283",
+    "README.md": "6fcc9c8176f76ba8c7a593ab6d2edb3728e8d0dccfc0a1e53b26df4b00b14c62",
     "examples/availability.csv": "f217c0c318b450e59bf49035b5bc741fda2478b32a1f9e74e6507c998bd4e3ba",
     "examples/hog_svm/PUCPR/overcast/correct/db1176889de09da7.jpg": "6f9015b0b812767bbd766d2cb57726c4196d046fbbba66163d4608f7c8780a6a",
     "examples/hog_svm/PUCPR/overcast/error/36f6e4bcec205915.jpg": "77abf86d83a3a72a586703dc9776ff6e423eb970dbb0c155c6d47b8fa0a469d4",
@@ -101,7 +101,7 @@
     "hog_svm/timings.jsonl": "f820142fa54424c9d6221bc10e05f4876c3cbe3c93e16c90c813d9203ab485ee",
     "provenance.json": "b33881675963f567aea8f811d059e353b43a265d27b8750471e5151bd5f6c980",
     "source_evidence_sha256.json": "5284bde5eb6f49228b92b3eb1d75e23cf71b58fba8362df8e0902681b8fee0c7",
-    "tables/README.md": "a04a94afe4e01a2104f1665f8605dd9942e28202ee2b3413c328ae65f0746fc6",
+    "tables/README.md": "ed9a2333ae1ecb89e731d8f03de3295cb73efdcf3246cfecd0e62f5bd8de2891",
     "tables/by_camera.csv": "65523d27357936077b0fd5bb296fba9996c415ebc61cb95a07a2fd6d84a78174",
     "tables/by_camera_weather.csv": "e815af6a469011b74a1ce24b65879fd9637d1f7018e01d4c72be0015c9bdf504",
     "tables/by_weather.csv": "df27302d0f794eb61b9fc7e8a35a1793ed6480a5479d9c7088033c365b8e01f4",

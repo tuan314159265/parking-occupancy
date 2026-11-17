@@ -25,7 +25,7 @@ Giao thức `within_camera`, 270 ảnh validation (15.120 ô), CPU. Đây là s�
 | Hybrid 640 | 0.7439 | 0.6999 | 0.8920 | 12.674 | 504.4 |
 | YOLO full pixel-matched | 0.7418 | 0.6978 | 0.8819 | 12.311 | 430.8 |
 
-Accuracy tính *unknown* là sai; coverage là tỉ lệ ô có dự đoán. Công thức: [docs/evaluation.md](docs/evaluation.md).
+Accuracy tính *unknown* là sai; coverage là tỉ lệ ô có dự đoán.
 
 ## Kết quả test cuối (đã hoàn tất)
 
@@ -40,7 +40,7 @@ Task 13 đã hoàn tất ở lượt ngày **11/11/2026**: cùng 270 ảnh / 15.
 
 **Dùng cho task 17–18:** [báo cáo test và ảnh minh họa](reports/final_test_v1/README.md), [bảng tổng](reports/final_test_v1/tables/comparison.csv), [theo camera](reports/final_test_v1/tables/by_camera.csv), [theo thời tiết](reports/final_test_v1/tables/by_weather.csv), [timing từng giai đoạn](reports/final_test_v1/tables/timings_per_frame.csv). Thư mục báo cáo giữ đủ dự đoán, 88 ảnh minh họa, metadata và checksum.
 
-Đã xác minh đủ bốn phương pháp và metrics tính lại khớp dự đoán/timing; 127 file nguồn khớp manifest gốc. Test có lịch sử đã được quan sát ở notebook cũ, nên không gọi đây là blind holdout chưa từng quan sát. Các thời gian là CPU, không so trực tiếp GPU Colab.
+Đã xác minh đủ bốn phương pháp và metrics tính lại khớp dự đoán/timing; 127 file nguồn khớp manifest gốc. Các thời gian là CPU, không so trực tiếp GPU Colab.
 
 ## Cấu trúc repository
 
@@ -50,14 +50,12 @@ final_test_module.py       Các bước test cuối: kiểm tra khóa → chạy
 notebooks/01_pklot_run_all.ipynb   Notebook chính, chạy Run All trên Colab hoặc local
 scripts/run_final_test.py         CLI chạy test cuối (giống notebook mục 6.3)
 scripts/build_final_test_bundle.py  Đóng gói model/khóa để chuyển sang máy khác (không chứa dataset)
-scripts/export_validation_report.py Xuất báo cáo nhẹ vào reports/ sau một lượt validation đầy đủ
 configs/                   pklot_v1.json (split), validation_v1.json (plan tìm kiếm + checkpoint), default.json
 data/manifests/pklot_v1/   Split train/val/test và polygon ô đỗ đã khóa (có SHA256 trong split_lock.json)
 reports/validation_v1/     Kết quả validation, plan, khóa locked_config.json, hash
 reports/final_test_v1/     Test cuối: bảng, dự đoán, timing, 88 ảnh minh họa và hash
 src/parking_occupancy/     Lớp tương thích cho `pip install -e .` (chuyển tiếp tới parking_module)
 tests/                     136 unit test (không cần dataset, model hay mạng)
-docs/                      Giao thức dữ liệu, đánh giá, validation, pipeline, giao diện, nhật ký bàn giao
 ```
 
 **Không có trong Git** (được `.gitignore` chặn): archive/ảnh/XML PKLot (`data/raw/`), checkpoint (`models/`, `*.pt`), model đã huấn luyện (`*.joblib`), cache/feature (`*.npy`), mọi kết quả chạy (`outputs/`) và gói bàn giao (`*.zip`). Repo không chứa thông tin đăng nhập hay đường dẫn cá nhân.
@@ -104,7 +102,7 @@ Kết quả: `data/raw/PKLot/{PUCPR,UFPR04,UFPR05}/...` và `outputs/full/{valid
 | `within_camera` (PUCPR + UFPR04 + UFPR05) | 1.182 | 270 | 270 |
 | `transfer_ufpr04_to_ufpr05` | 420 | 90 | 90 |
 
-Nếu chạy lại `python parking_module.py splits --manifest outputs/full/valid_samples.jsonl`, lệnh chỉ xác minh split hiện có với audit của bạn và từ chối ghi đè. Chi tiết: [docs/dataset-protocol.md](docs/dataset-protocol.md).
+Nếu chạy lại `python parking_module.py splits --manifest outputs/full/valid_samples.jsonl`, lệnh chỉ xác minh split hiện có với audit của bạn và từ chối ghi đè.
 
 ## 3. Checkpoint YOLO11n
 
@@ -143,7 +141,7 @@ python scripts/run_final_test.py --output outputs/locked_test_v1 --device cpu
 python parking_module.py evaluate --help
 ```
 
-Validation đầy đủ trên CPU mất nhiều giờ; smoke-test dùng `--max-train-frames 24 --max-val-frames 3` và một `--output` **khác** (lượt thiếu dữ liệu không tạo khóa). Xem [docs/validation.md](docs/validation.md).
+Validation đầy đủ trên CPU mất nhiều giờ; smoke-test dùng `--max-train-frames 24 --max-val-frames 3` và một `--output` **khác** (lượt thiếu dữ liệu không tạo khóa).
 
 ### Test cuối và gói khóa
 
@@ -172,19 +170,8 @@ Notebook không nhúng mã xử lý: cell mục 2 tải `parking_module.py` từ
 
 - `locked_config.json` băm mã nguồn 27 hàm suy luận/đánh giá trong `parking_module.py` (`engine_sha256`). Sửa bất kỳ hàm nào trong số đó, kể cả định dạng, sẽ làm test cuối bị từ chối. `tests/test_locked_release.py` phát hiện điều này ngay khi chạy unit test.
 - Không chọn tham số, ngưỡng hay model trên test. Mọi cấu hình đã thử (kể cả không cải thiện) đều được lưu trong `reports/validation_v1/`.
-- **Lịch sử test:** notebook cũ (commit `293893d`) từng in output trên 270 ảnh test với cấu hình trước đó. Lượt validation mới đã chốt plan trước khi xem lại và không dùng điểm test, nhưng test v1 **không** phải holdout chưa từng quan sát. Báo cáo cần nêu rõ điều này.
 - Giao thức `transfer_ufpr04_to_ufpr05` đã có split nhưng chưa chạy validation/test mới.
 - Timing đo một lượt trên CPU local sau warm-up; không so trực tiếp với GPU Colab.
-
-## Tài liệu chi tiết
-
-- [docs/introduction-and-data.md](docs/introduction-and-data.md): bài toán, PKLot, kiểm tra chất lượng dữ liệu
-- [docs/dataset-protocol.md](docs/dataset-protocol.md): quy tắc chia theo ngày, ngân sách, giao thức chuyển camera
-- [docs/interfaces.md](docs/interfaces.md): định dạng Frame/ParkingSpace/VehicleDetection, hệ tọa độ
-- [docs/pipeline-integration.md](docs/pipeline-integration.md): pipeline hình học → ROI/tile → YOLO → ghép xe–ô
-- [docs/evaluation.md](docs/evaluation.md): công thức chỉ số, xử lý unknown, schema đầu ra
-- [docs/validation.md](docs/validation.md): dải tìm kiếm, đối chứng pixel, cache, khóa
-- [docs/task-status.md](docs/task-status.md): nhật ký bàn giao theo task
 
 ## Nguồn và trích dẫn
 

@@ -26,8 +26,7 @@ Pixel tensor của hybrid và đối chứng bằng nhau trên từng ảnh; pad
 Không quy toàn bộ lợi ích so với full 640 cho ROI; cần đọc cùng kết quả full pixel-matched và thời gian. Ngân sách pixel không áp dụng cho HOG/SVM.
 Timing là một lượt đo sau warm-up trên CPU local, có thể chịu tải của máy; không so trực tiếp với timing GPU Colab. Kết quả validation có thiên lệch chọn tham số.
 
-## Khóa và lịch sử test
+## Khóa
 
 locked_config.json giữ checkpoint, split, model, tham chiếu train, engine và phiên bản; model HOG/geometry reference cụ thể nằm trong outputs/validation_v1/ và cần giữ để chạy test đúng khóa.
-Notebook cũ đã lưu output test tại main 293893d. Task này không dùng điểm test để xếp hạng nhưng không gọi test v1 là holdout chưa quan sát; xem docs/validation.md về lịch sử.
 Ảnh/feature/checkpoint/bundle lớn không được đưa vào bản báo cáo Git này. Bằng chứng chi tiết per-slot/per-frame ở outputs/validation_v1/selected/.

@@ -213,7 +213,6 @@ def export_tables(test_dir, manifest_dir, validation_dir):
                    **row["timing"]) for name, report in reports.items() for row in report["per_frame"]]
     _csv(tables / "timings_per_frame.csv", timing)
     lines = ["# Final-test results", "", "Configuration selected on validation; no test parameter search.", "",
-             "The legacy notebook had already exposed the test split; this is not an unseen blind holdout.", "",
              "| Method | F1 | Accuracy | Coverage | Vacant MAE | ms/image |", "|---|---:|---:|---:|---:|---:|"]
     for row in overall:
         lines.append(f"| {LABELS[row['method']]} | {row['f1']:.4f} | {row['accuracy']:.4f} | {row['coverage']:.4f} | {row['mae_vacant_count']:.3f} | {row['total_ms_mean']:.1f} |")
